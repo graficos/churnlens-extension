@@ -1,0 +1,26 @@
+import * as vscode from 'vscode';
+
+export class ConfigManager {
+  static getPeriodDays(): number {
+    return vscode.workspace.getConfiguration('churnlens').get('periodDays', 30);
+  }
+
+  static getBadgeTheme(): string {
+    return vscode.workspace
+      .getConfiguration('churnlens')
+      .get('badgeTheme', 'circles');
+  }
+
+  static getColors(): string[] {
+    // Default palette (Green to Red heatmap style)
+    // Level 1 (Low) -> Level 6 (High)
+    return [
+      '#90EE90', // LightGreen
+      '#ADFF2F', // GreenYellow
+      '#FFD700', // Gold
+      '#FFA500', // Orange
+      '#FF4500', // OrangeRed
+      '#FF0000', // Red
+    ];
+  }
+}
