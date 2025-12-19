@@ -9,7 +9,7 @@
   <h3 align="center">ChurnLens</h3>
 </div>
 
-**ChurnLens** helps you identify "hotspots" in your codebase by visualizing code churn directly in the VS Code File Explorer. Files that change frequently are highlighted with different colors in a custom "Churn Explorer" sidebar, allowing you to spot potential areas of instability, high churnor high maintenance at a glance.
+**ChurnLens** helps you identify "hotspots" in your codebase by visualizing code churn directly in the IDE sodebar. Files that change frequently are highlighted with different colors in a custom "Churn Explorer" sidebar, allowing you to spot potential areas of instability, high churn or high maintenance at a glance.
 
 This extension is inspired by the research on code churn as a predictor of defects:
 
