@@ -32,12 +32,16 @@ class ConfigPanel {
                         .update('periodDays', message.value, vscode.ConfigurationTarget.Global);
                     vscode.window.showInformationMessage(`ChurnLens: Period updated to ${message.value} days`);
                     return;
-                case 'updateTheme':
-                    vscode.workspace
-                        .getConfiguration('churnlens')
-                        .update('badgeTheme', message.value, vscode.ConfigurationTarget.Global);
-                    vscode.window.showInformationMessage(`ChurnLens: Theme updated to ${message.value}`);
-                    return;
+            }
+        }, null, this._disposables);
+        // Listen for configuration changes to sync the Webview
+        vscode.workspace.onDidChangeConfiguration((e) => {
+            if (e.affectsConfiguration('churnlens.periodDays')) {
+                const newPeriod = config_1.ConfigManager.getPeriodDays();
+                this._panel.webview.postMessage({
+                    command: 'setPeriod',
+                    value: newPeriod,
+                });
             }
         }, null, this._disposables);
     }
@@ -57,8 +61,6 @@ class ConfigPanel {
     }
     _getHtmlForWebview() {
         const currentPeriod = config_1.ConfigManager.getPeriodDays();
-        const colors = config_1.ConfigManager.getColors();
-        const currentTheme = config_1.ConfigManager.getBadgeTheme();
         const html = String.raw;
         // Simple HTML for now
         return html `<!DOCTYPE html>
@@ -103,22 +105,6 @@ class ConfigPanel {
             button:hover {
               background: var(--vscode-button-hoverBackground);
             }
-            .palette {
-              display: flex;
-              gap: 10px;
-              margin-top: 10px;
-            }
-            .color-box {
-              width: 30px;
-              height: 30px;
-              border: 1px solid #ccc;
-            }
-            select {
-              padding: 5px;
-              background: var(--vscode-dropdown-background);
-              color: var(--vscode-dropdown-foreground);
-              border: 1px solid var(--vscode-dropdown-border);
-            }
           </style>
         </head>
         <body>
@@ -130,39 +116,6 @@ class ConfigPanel {
             <button onclick="updatePeriod()">Save</button>
           </div>
 
-          <div class="setting">
-            <label for="theme">Badge Theme</label>
-            <select id="theme" onchange="updateTheme()">
-              <option
-                value="circles"
-                ${currentTheme === 'circles' ? 'selected' : ''}
-              >
-                Circles
-              </option>
-              <option
-                value="squares"
-                ${currentTheme === 'squares' ? 'selected' : ''}
-              >
-                Squares
-              </option>
-            </select>
-          </div>
-
-          <div class="setting">
-            <label>Current Color Palette (Low -> High)</label>
-            <div class="palette">
-              ${colors
-            .map((c) => `<div class="color-box" style="background-color: ${c}" title="${c}"></div>`)
-            .join('')}
-            </div>
-            <p>
-              <em
-                >Color configuration via this UI is coming soon. You can
-                currently edit colors in User Settings (JSON).</em
-              >
-            </p>
-          </div>
-
           <script>
             const vscode = acquireVsCodeApi();
             function updatePeriod() {
@@ -172,13 +125,16 @@ class ConfigPanel {
                 value: value,
               });
             }
-            function updateTheme() {
-              const value = document.getElementById('theme').value;
-              vscode.postMessage({
-                command: 'updateTheme',
-                value: value,
-              });
-            }
+
+            // Listen for messages from the extension
+            window.addEventListener('message', (event) => {
+              const message = event.data;
+              switch (message.command) {
+                case 'setPeriod':
+                  document.getElementById('period').value = message.value;
+                  break;
+              }
+            });
           </script>
         </body>
       </html>`;

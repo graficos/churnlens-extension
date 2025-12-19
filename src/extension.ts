@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { GitService } from './git';
 import { ChurnSidebarProvider } from './sidebar/ChurnSidebarProvider';
 import { ConfigPanel } from './webview/ConfigPanel';
@@ -41,8 +42,54 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  let openInGithubDisposable = vscode.commands.registerCommand(
+    'churnlens.openInGithub',
+    async (contextArg) => {
+      if (!contextArg || !contextArg.path) {
+        return;
+      }
+
+      const filePath = contextArg.path;
+      try {
+        const remoteUrl = await gitService.getRemoteUrl();
+        if (!remoteUrl) {
+          vscode.window.showErrorMessage(
+            'ChurnLens: Could not find git remote URL.'
+          );
+          return;
+        }
+
+        // Clean remote URL (e.g. git@github.com:user/repo.git -> https://github.com/user/repo)
+        let httpUrl = remoteUrl.replace(/\.git$/, '');
+        if (httpUrl.startsWith('git@')) {
+          httpUrl = httpUrl.replace(':', '/').replace('git@', 'https://');
+        }
+
+        // Relative path
+        const relPath = path.relative(rootPath, filePath);
+        // Ensure forward slashes
+        const normalizedRelPath = relPath.split(path.sep).join('/');
+
+        // Construct commits URL
+        // Format: https://github.com/user/repo/commits/main/path/to/file
+        // We will default to HEAD (usually main/master) or simply no branch part?
+        // Actually github url is /commits/[branch]/[path]
+        // If we don't know the branch, maybe just 'HEAD'?
+        const finalUrl = `${httpUrl}/commits/HEAD/${normalizedRelPath}`;
+
+        vscode.env.openExternal(vscode.Uri.parse(finalUrl));
+      } catch (e) {
+        vscode.window.showErrorMessage(
+          'ChurnLens: Error opening GitHub history.'
+        );
+        console.error(e);
+      }
+    }
+  );
+
   context.subscriptions.push(disposable);
   context.subscriptions.push(refreshDisposable);
+  context.subscriptions.push(openInGithubDisposable);
 
   // Listen for configuration changes
   context.subscriptions.push(

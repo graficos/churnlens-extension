@@ -40,8 +40,20 @@
       {
         "command": "churnlens.refresh",
         "title": "ChurnLens: Refresh Stats"
+      },
+      {
+        "command": "churnlens.openInGithub",
+        "title": "See git history in github"
       }
     ],
+    "menus": {
+      "webview/context": [
+        {
+          "command": "churnlens.openInGithub",
+          "when": "webviewId == churnlens.sidebar && webviewSection == fileItem"
+        }
+      ]
+    },
     "colors": [
       {
         "id": "churnlens.level1",
@@ -105,15 +117,6 @@
           "type": "number",
           "default": 30,
           "description": "Number of days to look back in git history."
-        },
-        "churnlens.badgeTheme": {
-          "type": "string",
-          "enum": [
-            "circles",
-            "squares"
-          ],
-          "default": "circles",
-          "description": "Theme for the churn level badges."
         },
         "churnlens.hideRoot": {
           "type": "boolean",
