@@ -67,4 +67,15 @@ export class GitService {
       return new Map();
     }
   }
+
+  async getRemoteUrl(): Promise<string> {
+    try {
+      const remotes = await this.git.getRemotes(true);
+      const origin = remotes.find((r) => r.name === 'origin');
+      return origin ? origin.refs.fetch : '';
+    } catch (e) {
+      Logger.error('Error fetching remote url:', e);
+      return '';
+    }
+  }
 }

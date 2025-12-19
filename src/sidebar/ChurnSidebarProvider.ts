@@ -30,6 +30,13 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
   ) {
     this._view = webviewView;
 
+    // Refresh when view becomes visible
+    webviewView.onDidChangeVisibility(() => {
+      if (webviewView.visible) {
+        this.refresh();
+      }
+    });
+
     webviewView.webview.options = {
       enableScripts: true,
       localResourceRoots: [this._extensionUri],
@@ -40,6 +47,9 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
     // Listen for messages from the sidebar
     webviewView.webview.onDidReceiveMessage((data) => {
       switch (data.type) {
+        case 'ready':
+          this.refresh();
+          break;
         case 'refresh':
           this.refresh();
           break;
@@ -55,8 +65,8 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
       }
     });
 
-    // Initial load
-    this.refresh();
+    // Initial load - triggered by 'ready' event or manually here fallback
+    // this.refresh();
   }
 
   private openFile(filePath: string) {
@@ -184,7 +194,12 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
 
       const data = serialize(rootNodes);
 
-      this._view.webview.postMessage({ type: 'update', files: data });
+      // Include period in update so input can sync
+      this._view.webview.postMessage({
+        type: 'update',
+        files: data,
+        period: days,
+      });
     } catch (e) {
       Logger.error('Error refreshing sidebar', e);
     }
@@ -369,6 +384,9 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
           <script>
             const vscode = acquireVsCodeApi();
 
+            // Notify extension that we are ready
+            vscode.postMessage({ type: 'ready' });
+
             function refresh() {
               vscode.postMessage({ type: 'refresh' });
             }
@@ -384,6 +402,9 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
 
             window.addEventListener('message', (event) => {
               if (event.data.type === 'update') {
+                if (event.data.period) {
+                  document.getElementById('period-input').value = event.data.period;
+                }
                 renderTree(event.data.files);
               }
             });
@@ -433,14 +454,19 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
               nodes.forEach((node) => {
                 const li = document.createElement('li');
 
+                const contextValue = JSON.stringify({ webviewSection: 'fileItem', path: node.path });
+                // We must escape quotes for HTML attribute
+                const safeContext = contextValue.replace(/"/g, '&quot;');
+
                 // Content Row
                 // Using details/summary for folders
                 if (node.isDir && node.children && node.children.length > 0) {
                   const details = document.createElement('details');
-                  // details.open = true; // Auto expand high churn? Or all? Maybe too noisy.
+
 
                   const summary = document.createElement('summary');
                   summary.className = 'node level level-' + node.level;
+                  summary.setAttribute('data-vscode-context', safeContext);
 
                   summary.innerHTML = \`<span class="arrow">▶</span> <span class="icon codicon codicon-folder"></span> <span class="name">\${node.name}</span> <span class="count">\${node.count}</span>\`;
 
@@ -452,6 +478,7 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
                   const a = document.createElement('a');
                   a.className = 'node level level-' + node.level;
                   a.href = '#';
+                  a.setAttribute('data-vscode-context', safeContext);
                   const iconClass = getIconClass(node.name, false);
                   a.innerHTML = \`<span class="arrow empty"></span> <span class="icon \${iconClass}"></span> <span class="name">\${node.name}</span> <span class="count">\${node.count}</span>\`;
                   a.onclick = (e) => {

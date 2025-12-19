@@ -41,62 +41,34 @@ export class ChurnDecorationProvider implements vscode.FileDecorationProvider {
 
     let badge = '';
     let tooltip = '';
-    const theme = ConfigManager.getBadgeTheme();
 
     if (count === 0) {
       // Level 0 - Green
-      badge = theme === 'squares' ? '🟩' : '🟢';
+      badge = '🟢';
       tooltip = `\nChurnLens: No changes in the last ${ConfigManager.getPeriodDays()} days`;
     } else {
-      // Mapping levels 1-6 to Emojis
-      if (theme === 'squares') {
-        switch (level) {
-          case 1:
-            badge = '�';
-            break;
-          case 2:
-            badge = '🟨';
-            break;
-          case 3:
-            badge = '�';
-            break;
-          case 4:
-            badge = '�';
-            break;
-          case 5:
-            badge = '🟥';
-            break; // Repeat red? Or maybe purple/brown square? 🟫?
-          case 6:
-            badge = '🔥';
-            break; // Fire is universal? or ⬛?
-          // Let's keep Fire for highest levels even in square theme for impact
-          default:
-            badge = '�';
-        }
-      } else {
-        // Circles (Default)
-        switch (level) {
-          case 1:
-            badge = '🟢';
-            break;
-          case 2:
-            badge = '🟡';
-            break;
-          case 3:
-            badge = '🟠';
-            break;
-          case 4:
-            badge = '🔴';
-            break;
-          case 5:
-            badge = '🔥';
-            break;
-          case 6:
-            badge = '💥';
-            break;
-          default:
-            badge = '🟢';
-        }
+      // Mapping levels 1-6 to Emojis (Default Circles)
+      switch (level) {
+        case 1:
+          badge = '🟢';
+          break;
+        case 2:
+          badge = '🟡';
+          break;
+        case 3:
+          badge = '🟠';
+          break;
+        case 4:
+          badge = '🔴';
+          break;
+        case 5:
+          badge = '🔥';
+          break;
+        case 6:
+          badge = '💥';
+          break;
+        default:
+          badge = '🟢';
       }
       tooltip = `\nChurnLens: ${count} changes in the last ${ConfigManager.getPeriodDays()} days`;
     }
