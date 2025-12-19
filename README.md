@@ -1,13 +1,12 @@
 # ChurnLens
 
-**ChurnLens** helps you identify "hotspots" in your codebase by visualizing code churn directly in the VS Code File Explorer. Files that change frequently are highlighted with color-coded decorations, allowing you to spot potential areas of instability or high maintenance at a glance.
+**ChurnLens** helps you identify "hotspots" in your codebase by visualizing code churn directly in the VS Code File Explorer. Files that change frequently are highlighted, allowing you to spot potential areas of instability or high maintenance at a glance.
 
 ## Features
 
-- **Heatmap Decorations**: Files are colored from Green (Low Churn) to Red (High Churn) based on their modification history.
-- **Churn Tooltips**: Hover over any decorated file to see the exact number of changes in the configured period.
+- **Churn Explorer**: A dedicated sidebar exploring the churn of your project with a tree view.
+- **Context Menu Integration**: Right-click on any file in the Churn Explorer to view its **Git history in GitHub**.
 - **Configurable Lookback**: Adjust the time window for churn calculation (default: 30 days).
-- **Customizable Palette**: Configure the colors used for the 6 churn levels.
 
 ## Configuration
 
@@ -19,15 +18,15 @@ Run the command `ChurnLens: Open Configuration` to open the visual configuration
 Here you can:
 
 - Set the **Churn Calculation Period** (in days).
-- Preview the current **Color Palette**.
 
 ### Extension Settings
 
 - `churnlens.periodDays`: Number of days to look back in git history to calculate churn (default: `30`).
+- `churnlens.hideRoot`: Hide the root project folder from the Churn Explorer (default: `true`).
 
 ### Color Customization
 
-You can customize the 6 churn levels in your `settings.json` using `workbench.colorCustomizations`:
+While the UI customization has been streamlined, you can still customize the 6 churn levels in your `settings.json` using `workbench.colorCustomizations`:
 
 ```json
 "workbench.colorCustomizations": {
@@ -44,10 +43,16 @@ You can customize the 6 churn levels in your `settings.json` using `workbench.co
 
 - `ChurnLens: Open Configuration`: Opens the configuration webview.
 - `ChurnLens: Refresh Stats`: Manually recalculates churn statistics and updates decorations.
+- `See git history in github`: (Context menu) Opens the file's history on GitHub.
 
 ## Requirements
 
 - The opened folder must be a **Git repository**.
 - **Git** must be installed and available in your system PATH.
 
-## Development
+## Reference
+
+This extension is inspired by the research on code churn as a predictor of defects:
+
+> **[Code Churn: A Measure for Estimating the Impact of Code Change](https://sci-hub.se/https://ieeexplore.ieee.org/document/738486)** > _J.C. Munson; S.G. Elbaum_
+> IEEE International Conference on Software Maintenance, 1998.

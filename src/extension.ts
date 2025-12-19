@@ -94,7 +94,10 @@ export function activate(context: vscode.ExtensionContext) {
   // Listen for configuration changes
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration('churnlens.periodDays')) {
+      if (
+        e.affectsConfiguration('churnlens.periodDays') ||
+        e.affectsConfiguration('churnlens.hideRoot')
+      ) {
         sidebarProvider.refresh();
       }
     })
