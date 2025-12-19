@@ -3,7 +3,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/graficos/churnlens-extension">
-    <img src="https://github.com/graficos/churnlens-extension/blob/main/public/logo.png" alt="Logo" width="100" height="100">
+    <img src="https://github.com/graficos/churnlens-extension/blob/main/public/logo.png?raw=true" alt="Logo" width="100" height="100">
   </a>
 
   <h3 align="center">ChurnLens</h3>
@@ -18,7 +18,7 @@ This extension is inspired by the research on code churn as a predictor of defec
 
 ## Features
 
-![ChurnLens](https://github.com/graficos/churnlens-extension/blob/main/public/screenshot.png)
+![ChurnLens](https://github.com/graficos/churnlens-extension/blob/main/public/screenshot.png?raw=true)
 
 - **Churn Explorer**: A dedicated sidebar exploring the churn of your project with a tree view.
 - **Context Menu Integration**: Right-click on any file in the Churn Explorer to view its **Git history in GitHub**.
