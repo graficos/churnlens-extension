@@ -364,7 +364,7 @@ class ChurnSidebarProvider {
               root.innerHTML = '';
               if (nodes.length === 0) {
                 root.innerHTML =
-                  '<div style="padding:10px">No churn data.</div>';
+                  '<div style="padding:10px">No churn data. Try selecting a longer period of time.</div>';
                 return;
               }
               root.appendChild(createList(nodes));
@@ -405,9 +405,7 @@ class ChurnSidebarProvider {
                 const li = document.createElement('li');
 
                 const contextValue = JSON.stringify({ webviewSection: 'fileItem', path: node.path });
-                // We must escape quotes for HTML attribute
-                const safeContext = contextValue.replace(/"/g, '&quot;');
-
+                
                 // Content Row
                 // Using details/summary for folders
                 if (node.isDir && node.children && node.children.length > 0) {
@@ -416,7 +414,7 @@ class ChurnSidebarProvider {
 
                   const summary = document.createElement('summary');
                   summary.className = 'node level level-' + node.level;
-                  summary.setAttribute('data-vscode-context', safeContext);
+                  summary.setAttribute('data-vscode-context', contextValue);
 
                   summary.innerHTML = \`<span class="arrow">▶</span> <span class="icon codicon codicon-folder"></span> <span class="name">\${node.name}</span> <span class="count">\${node.count}</span>\`;
 
@@ -428,7 +426,7 @@ class ChurnSidebarProvider {
                   const a = document.createElement('a');
                   a.className = 'node level level-' + node.level;
                   a.href = '#';
-                  a.setAttribute('data-vscode-context', safeContext);
+                  a.setAttribute('data-vscode-context', contextValue);
                   const iconClass = getIconClass(node.name, false);
                   a.innerHTML = \`<span class="arrow empty"></span> <span class="icon \${iconClass}"></span> <span class="name">\${node.name}</span> <span class="count">\${node.count}</span>\`;
                   a.onclick = (e) => {
