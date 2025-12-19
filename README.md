@@ -1,6 +1,13 @@
-# ChurnLens
+# ChurnLens - VS Code Extension
 
-**ChurnLens** helps you identify "hotspots" in your codebase by visualizing code churn directly in the VS Code File Explorer. Files that change frequently are highlighted, allowing you to spot potential areas of instability or high maintenance at a glance.
+![ChurnLens](public/screenshot.png)
+
+**ChurnLens** helps you identify "hotspots" in your codebase by visualizing code churn directly in the VS Code File Explorer. Files that change frequently are highlighted with different colors in a custom "Churn Explorer" sidebar, allowing you to spot potential areas of instability, high churnor high maintenance at a glance.
+
+This extension is inspired by the research on code churn as a predictor of defects:
+
+> **[Code Churn: A Measure for Estimating the Impact of Code Change](https://sci-hub.se/https://ieeexplore.ieee.org/document/738486)** > _J.C. Munson; S.G. Elbaum_
+> IEEE International Conference on Software Maintenance, 1998.
 
 ## Features
 
@@ -49,10 +56,3 @@ While the UI customization has been streamlined, you can still customize the 6 c
 
 - The opened folder must be a **Git repository**.
 - **Git** must be installed and available in your system PATH.
-
-## Reference
-
-This extension is inspired by the research on code churn as a predictor of defects:
-
-> **[Code Churn: A Measure for Estimating the Impact of Code Change](https://sci-hub.se/https://ieeexplore.ieee.org/document/738486)** > _J.C. Munson; S.G. Elbaum_
-> IEEE International Conference on Software Maintenance, 1998.
