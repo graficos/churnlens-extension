@@ -1,7 +1,17 @@
 {
   "name": "churnlens",
   "displayName": "ChurnLens",
-  "description": "Visualizes code churn in the file explorer.",
+  "description": "Visualizes code churn in a Churn Explorer sidebar.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/graficos/churnlens-extension.git"
+  },
+  "publisher": "graficos",
+  "author": {
+    "name": "Paul Melero"
+  },
+  "url": "https://github.com/graficos/churnlens-extension",
+  "license": "MIT",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.90.0"
@@ -128,6 +138,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
+    "vscode:publish": "vsce package && vsce publish",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "package": "tsc -p ./",
