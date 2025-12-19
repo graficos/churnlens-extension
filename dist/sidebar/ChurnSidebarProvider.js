@@ -27,6 +27,12 @@ class ChurnSidebarProvider {
                 case 'openFile':
                     this.openFile(data.path);
                     break;
+                case 'openSettings':
+                    vscode.commands.executeCommand('churnlens.openConfig');
+                    break;
+                case 'updatePeriod':
+                    this.updatePeriod(data.value);
+                    break;
             }
         });
         // Initial load
@@ -35,6 +41,12 @@ class ChurnSidebarProvider {
     openFile(filePath) {
         const openPath = vscode.Uri.file(filePath);
         vscode.window.showTextDocument(openPath);
+    }
+    async updatePeriod(days) {
+        await vscode.workspace
+            .getConfiguration('churnlens')
+            .update('periodDays', days, vscode.ConfigurationTarget.Global);
+        // Refresh will be triggered by the configuration change listener in extension.ts
     }
     async refresh() {
         if (!this._view) {
@@ -151,23 +163,55 @@ class ChurnSidebarProvider {
           <style>
             body {
               font-family: var(--vscode-font-family);
+              font-size: var(--vscode-font-size);
               padding: 0;
               margin: 0;
               color: var(--vscode-foreground);
               background-color: var(--vscode-sideBar-background);
             }
             .toolbar {
-              padding: 10px;
+              padding: 6px 10px;
               display: flex;
               justify-content: space-between;
+              align-items: center;
               border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
               font-size: 0.8rem;
+            }
+            .period-container {
+              display: flex;
+              align-items: center;
+              gap: 5px;
+            }
+            input[type=number] {
+              background: var(--vscode-input-background);
+              color: var(--vscode-input-foreground);
+              border: 1px solid var(--vscode-input-border);
+              width: 40px;
+              padding: 2px 4px;
+              outline: none;
+            }
+            input[type=number]:focus {
+              border-color: var(--vscode-focusBorder);
+            }
+            .actions {
+              display: flex;
+              gap: 4px;
             }
             .toolbar button {
               background: none;
               border: none;
               color: var(--vscode-icon-foreground);
               cursor: pointer;
+              font-size: 1rem;
+              padding: 2px 4px;
+              border-radius: 3px;
+            }
+            .toolbar button:hover {
+              background-color: var(--vscode-button-hoverBackground);
+            }
+
+            #tree-root {
+              padding: 10px;
             }
 
             ul {
@@ -187,6 +231,8 @@ class ChurnSidebarProvider {
               cursor: pointer;
               border-bottom: 1px solid var(--vscode-tree-tableODdRowsBackground);
               align-items: center;
+              text-decoration: none;
+              color: inherit;
             }
             .node:hover {
               background-color: var(--vscode-list-hoverBackground);
@@ -261,11 +307,13 @@ class ChurnSidebarProvider {
         </head>
         <body>
           <div class="toolbar">
-            <p>
-              Period:
-              <span id="period">${config_1.ConfigManager.getPeriodDays()}</span> days
-            </p>
-            <button onclick="refresh()">↻ Refresh</button>
+            <div class="period-container">
+              Period: <input type="number" id="period-input" value="${config_1.ConfigManager.getPeriodDays()}" min="1" onchange="updatePeriod()" onblur="updatePeriod()" /> days
+            </div>
+            <div class="actions">
+              <button title="Refresh" onclick="refresh()">🔃</button>
+              <button title="Settings" onclick="openSettings()">⚙️</button>
+            </div>
           </div>
           <div id="tree-root">Loading...</div>
 
@@ -274,6 +322,15 @@ class ChurnSidebarProvider {
 
             function refresh() {
               vscode.postMessage({ type: 'refresh' });
+            }
+
+            function openSettings() {
+              vscode.postMessage({ type: 'openSettings' });
+            }
+
+            function updatePeriod() {
+              const val = document.getElementById('period-input').value;
+              vscode.postMessage({ type: 'updatePeriod', value: parseInt(val) });
             }
 
             window.addEventListener('message', (event) => {
@@ -334,7 +391,7 @@ class ChurnSidebarProvider {
                   // details.open = true; // Auto expand high churn? Or all? Maybe too noisy.
 
                   const summary = document.createElement('summary');
-                  summary.className = 'node level-' + node.level;
+                  summary.className = 'node level level-' + node.level;
 
                   summary.innerHTML = \`<span class="arrow">▶</span> <span class="icon codicon codicon-folder"></span> <span class="name">\${node.name}</span> <span class="count">\${node.count}</span>\`;
 
@@ -343,13 +400,16 @@ class ChurnSidebarProvider {
                   li.appendChild(details);
                 } else {
                   // File
-                  const div = document.createElement('div');
-                  div.className = 'node level-' + node.level;
+                  const a = document.createElement('a');
+                  a.className = 'node level level-' + node.level;
+                  a.href = '#';
                   const iconClass = getIconClass(node.name, false);
-                  div.innerHTML = \`<span class="arrow empty"></span> <span class="icon \${iconClass}"></span> <span class="name">\${node.name}</span> <span class="count">\${node.count}</span>\`;
-                  div.onclick = () =>
+                  a.innerHTML = \`<span class="arrow empty"></span> <span class="icon \${iconClass}"></span> <span class="name">\${node.name}</span> <span class="count">\${node.count}</span>\`;
+                  a.onclick = (e) => {
+                    e.preventDefault();
                     vscode.postMessage({ type: 'openFile', path: node.path });
-                  li.appendChild(div);
+                  };
+                  li.appendChild(a);
                 }
                 ul.appendChild(li);
               });
