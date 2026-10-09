@@ -13,7 +13,7 @@
 
 This extension is inspired by the research on code churn as a predictor of defects:
 
-> **[Code Churn: A Measure for Estimating the Impact of Code Change](https://sci-hub.se/https://ieeexplore.ieee.org/document/738486)** > _J.C. Munson; S.G. Elbaum_
+> **[Code Churn: A Measure for Estimating the Impact of Code Change](https://sci-hub.reatk.com/10.1109/icsm.1998.738486)** > _J.C. Munson; S.G. Elbaum_
 > IEEE International Conference on Software Maintenance, 1998.
 
 ## Features
