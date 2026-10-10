@@ -25,6 +25,11 @@ export async function handleWebMessage(
     case 'setMetric':
       host.store.setMetric(message.value);
       break;
+    case 'setBaseline':
+      await vscode.workspace
+        .getConfiguration('churnlens')
+        .update('baseline', message.value, vscode.ConfigurationTarget.Global);
+      break;
     case 'select':
       host.store.setSelection(message.path);
       break;
