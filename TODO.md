@@ -69,32 +69,29 @@ Phase 1.
 
 A dedicated trend panel with charts, state shared with the tree.
 
-- [ ] **1.1 Vue, with no bundler.** Load `vue.global.prod.js` from
-      `node_modules` via `asWebviewUri` and define components in a plain JS
-      resource. Add a bundler only if this becomes painful.
-- [ ] **1.2 Shared state.** The extension owns a store; the sidebar and the
+- [ ] **1.1 Shared state.** The extension owns a store; the sidebar and the
       trend panel both render from it. Selecting a file or folder in the tree
       filters the trend panel. Post updates as messages, not full re-renders.
-- [ ] **1.3 Charts (hand-rolled SVG, no chart library).**
+- [ ] **1.2 Charts (hand-rolled SVG, no chart library).**
       - Delta vs Churn grouped bars, rounded corners, per period.
       - Stacked added / removed / modified bars (green / yellow / red).
       - Quarterly deletion-ratio trend (the AI-era question).
       - Cumulative churn as a gradient area chart.
-- [ ] **1.4 Info blocks.** Short explainer copy inline, linking to `docs/`.
-- [ ] **1.5 Risk panel.** Top-N highest-churn paths as a bar/timeline view.
+- [ ] **1.3 Info blocks.** Short explainer copy inline, linking to `docs/`.
+- [ ] **1.4 Risk panel.** Top-N highest-churn paths as a bar/timeline view.
       Click a bar to open the file. This is the "more risky" highlight.
-- [ ] **1.6 Commit-label grouping.** Parse Conventional Commit types
+- [ ] **1.5 Commit-label grouping.** Parse Conventional Commit types
       (`type(scope)!: subject`). Group churn by type. Assign one colour per
       label from the configured list. Default to the Angular convention.
-- [ ] **1.7 Baseline / build strategy.**
+- [ ] **1.6 Baseline / build strategy.**
       - Prefer semver tags as builds (closest to the paper's "builds").
       - Else merge commits into the default branch.
       - Else time buckets (week / quarter), which always exist.
       - Config `churnlens.baseline: auto | tags | merges | time`.
-- [ ] **1.8 Theme switcher.** Light, dark, high-contrast, plus a few accent
+- [ ] **1.7 Theme switcher.** Light, dark, high-contrast, plus a few accent
       themes. Implement first with CSS-variable tokens. Evaluate a UI-kit theme
       system later (Phase 2) for the full multi-theme switch.
-- [ ] **1.9 Path prefix / grouping fix.** Apply the fix from the bug note.
+- [ ] **1.8 Path prefix / grouping fix.** Apply the fix from the bug note.
 
 ---
 
@@ -124,10 +121,3 @@ Applies across the tree view, charts, panels and docs.
   tokens. Light, dark and high-contrast all work without extra work.
 - **Style:** rounded bar corners, gradient area fills, subtle grid lines, quiet
   axes. Keep the reference aesthetic in mind when implementing.
-
-## Open questions
-
-- Baseline default: proposed `auto`, with time buckets as the fallback. Confirm.
-- Vue without a bundler versus adding a small bundler. Proposed: no bundler
-  first.
-- Theme switcher via CSS tokens versus a UI kit. Proposed: tokens first.
