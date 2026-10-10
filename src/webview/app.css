@@ -24,3 +24,51 @@ body {
 a {
   color: var(--vscode-textLink-foreground);
 }
+
+.chart-grid {
+  stroke: var(--color-surface-content);
+  opacity: 0.1;
+}
+
+.chart-axis {
+  stroke: var(--color-surface-content);
+  opacity: 0.25;
+}
+
+.chart-tick {
+  fill: var(--color-surface-content);
+  opacity: 0.55;
+  font-size: 10px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.legend-item.off {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
