@@ -17,6 +17,7 @@
     {
       "type": "npm",
       "script": "compile",
+      "label": "ChurnLens compile",
       "problemMatcher": "$tsc",
       "presentation": {
         "reveal": "never"
