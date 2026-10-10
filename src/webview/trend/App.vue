@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useStore } from '../composables/useStore';
+import ChartCard from './ChartCard.vue';
 import type { RangePreset } from '../../protocol';
 
 const { state, post } = useStore();
@@ -28,6 +29,22 @@ const granularityLabel = computed(() => {
   if (points.length === 0) return '';
   return points.length > 1 ? `${points.length} periods` : '1 period';
 });
+
+const labels = computed(() => series.value.map((point) => point.label));
+
+const deltaVsChurn = computed(() => [
+  { name: 'Churn', color: 'var(--color-primary)', values: series.value.map((p) => p.churn) },
+  {
+    name: 'Delta',
+    color: 'var(--vscode-charts-purple, #b180d7)',
+    values: series.value.map((p) => p.delta),
+  },
+]);
+
+const composition = computed(() => [
+  { name: 'Added', color: 'var(--chart-added)', values: series.value.map((p) => p.added) },
+  { name: 'Removed', color: 'var(--chart-deleted)', values: series.value.map((p) => p.deleted) },
+]);
 
 function onPreset(event: Event) {
   post({ type: 'setRange', preset: (event.target as HTMLSelectElement).value as RangePreset });
@@ -111,10 +128,25 @@ function onMetric(value: 'churn' | 'delta') {
         </div>
       </section>
 
-      <section class="card">
+      <section v-if="series.length === 0" class="card">
         <h2>Trend</h2>
-        <p>{{ granularityLabel }} &middot; charts land next.</p>
+        <p>No churn in this range. Try a longer period.</p>
       </section>
+      <template v-else>
+        <ChartCard
+          title="Delta vs Churn"
+          :caption="granularityLabel"
+          :labels="labels"
+          :series="deltaVsChurn"
+        />
+        <ChartCard
+          title="Composition"
+          caption="Added and removed lines per period."
+          :labels="labels"
+          :series="composition"
+          stacked
+        />
+      </template>
     </template>
   </main>
 </template>
