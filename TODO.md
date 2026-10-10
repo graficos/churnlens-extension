@@ -1,0 +1,161 @@
+# ChurnLens Roadmap
+
+This document tracks the planned work in phases. It is a living doc; tick items
+off as they land.
+
+## Goal
+
+Report **objective churn metrics**. Nothing enters the product unless it is
+directly about churn. We prefer a loading state over background work, and we
+never let the extension consume CPU unless one of its views is visible.
+
+## Canonical metric definitions
+
+These names mean one thing everywhere: tree view, charts, docs, exports.
+
+| Signal | Formula | Meaning |
+| --- | --- | --- |
+| Added | count | New lines in the window |
+| Removed | count | Deleted lines in the window |
+| Modified | count | Lines present before and after |
+| Delta | added - deleted | Net growth (signed) |
+| Churn | added + deleted | Total movement (absolute, the risk signal) |
+| Deletion ratio | deleted / added | Rework pressure per period |
+
+Churn is the predictor. Delta is the direction. Never mix them. See
+[`docs/churn-and-delta.md`](docs/churn-and-delta.md).
+
+## Principles
+
+1. **Churn only.** No people metrics, no change-request counts. The source paper
+   found those weaker and unrelated.
+2. **Light on CPU.** Git work runs only while a ChurnLens view is visible. Cache
+   by `{range, HEAD}`. Show a loading state instead of polling.
+3. **One pass.** Fetch everything from a single `git log` running per refresh.
+4. **Explain in the repo.** Long explanations live in `docs/`. Short ones are
+   inline info blocks that link to them.
+5. **Theme-aware.** Base on VS Code theme variables so light, dark and
+   high-contrast work for free.
+
+---
+
+## Phase 0 — Foundations and bug fixes
+
+Correct the data layer and the date handling. The existing tree view keeps
+working on top of the new output. No new visuals yet.
+
+- [x] **0.0 Move the study.** Copied to `docs/icsm.1998.738486.md`.
+- [x] **0.1 Rewrite `src/git.ts` around `--numstat`.** One pass:
+      `git log --numstat --no-renames --since --until --pretty=format:...`.
+      Parses hash, author, date, subject, and per-file added/deleted. `-` is
+      treated as zero (binary). Returns structured records via the pure parser
+      in `src/parse.ts`.
+      - Note: git does not combine `--name-status` with `--numstat`; it prints
+        only one. Added/removed/modified classification moves to Phase 1 via
+        window-boundary tree snapshots. Renames are reported as delete + add
+        (`--no-renames`), which counts the movement.
+- [x] **0.2 Resolve the repo root.** `git rev-parse --show-toplevel`; paths
+      resolve against the repo root; results filtered to the workspace folder.
+- [x] **0.3 Fix the UTC off-by-one.** Local `YYYY-MM-DD HH:mm:ss` passed to
+      `--since` / `--until`; no `toISOString()` on local dates.
+- [x] **0.4 Date range selector.** Presets 2d/3d/7d/30d plus custom native
+      `<input type="date">`. Persisted as `churnlens.rangePreset`,
+      `churnlens.rangeStart`, `churnlens.rangeEnd`.
+- [x] **0.5 Churn vs Delta affordance.** Toolbar metric selector (Churn/Delta)
+      and an inline info chip that opens `docs/churn-and-delta.md`. Risk colours
+      stay based on churn; the metric only changes the displayed number and sort.
+- [x] **0.6 Remove dead code.** Deleted `src/decorations.ts`.
+- [x] **0.7 Configuration.** Added `rangePreset`, `rangeStart`, `rangeEnd`,
+      `commitLabels` (Angular default), kept `hideRoot`, retired `periodDays`.
+- [x] **0.8 Loading state.** Sidebar shows a spinner while git runs. Extension
+      no longer activates at startup (`activationEvents: []`).
+- [x] **0.9 One test.** `src/parse.test.ts` via `npm run test:parse`. Covers
+      add, delete, binary, multi-commit aggregation, and subject spacing.
+
+**Out of Phase 0:** the path-prefix/grouping rework. The shared `isWithin`
+helper is now correct and used for workspace filtering, but the folder
+aggregation structure is otherwise unchanged.
+
+### Bug note — path prefix collision (deferred)
+
+`filePath.startsWith(rootPath)` is a plain string test. It is wrong in two ways:
+
+- `rootPath = /a/repo` also matches `/a/repository/file.ts`, because
+  `/a/repository/...` literally starts with the characters `/a/repo`.
+- A path that is exactly the root matches too, and so do sibling folders whose
+  names share the prefix.
+
+The fix is to compare path segments, not characters:
+`filePath === rootPath || filePath.startsWith(rootPath + path.sep)`.
+This now lives in `src/paths.ts` as `isWithin` and is used for workspace
+filtering and folder aggregation. The broader tree/grouping rework stays in
+Phase 1.
+
+---
+
+## Phase 1 — Trend view
+
+A dedicated trend panel with charts, state shared with the tree.
+
+- [ ] **1.1 Vue, with no bundler.** Load `vue.global.prod.js` from
+      `node_modules` via `asWebviewUri` and define components in a plain JS
+      resource. Add a bundler only if this becomes painful.
+- [ ] **1.2 Shared state.** The extension owns a store; the sidebar and the
+      trend panel both render from it. Selecting a file or folder in the tree
+      filters the trend panel. Post updates as messages, not full re-renders.
+- [ ] **1.3 Charts (hand-rolled SVG, no chart library).**
+      - Delta vs Churn grouped bars, rounded corners, per period.
+      - Stacked added / removed / modified bars (green / yellow / red).
+      - Quarterly deletion-ratio trend (the AI-era question).
+      - Cumulative churn as a gradient area chart.
+- [ ] **1.4 Info blocks.** Short explainer copy inline, linking to `docs/`.
+- [ ] **1.5 Risk panel.** Top-N highest-churn paths as a bar/timeline view.
+      Click a bar to open the file. This is the "more risky" highlight.
+- [ ] **1.6 Commit-label grouping.** Parse Conventional Commit types
+      (`type(scope)!: subject`). Group churn by type. Assign one colour per
+      label from the configured list. Default to the Angular convention.
+- [ ] **1.7 Baseline / build strategy.**
+      - Prefer semver tags as builds (closest to the paper's "builds").
+      - Else merge commits into the default branch.
+      - Else time buckets (week / quarter), which always exist.
+      - Config `churnlens.baseline: auto | tags | merges | time`.
+- [ ] **1.8 Theme switcher.** Light, dark, high-contrast, plus a few accent
+      themes. Implement first with CSS-variable tokens. Evaluate a UI-kit theme
+      system later (Phase 2) for the full multi-theme switch.
+- [ ] **1.9 Path prefix / grouping fix.** Apply the fix from the bug note.
+
+---
+
+## Phase 2 — Export and advanced churn
+
+- [ ] **2.1 Export report.** Standalone HTML with data inlined, plus CSV and
+      JSON. Reuse the webview markup so the report matches what is on screen.
+- [ ] **2.2 Deleted-line provenance.** Use `git log --diff-filter=D` and
+      `git blame` on the parent revision to age the deleted lines. Recent
+      deletions are rework; old deletions are refactoring. This answers whether
+      rising churn is rework or cleanup.
+- [ ] **2.3 Theme system.** Evaluate a component-theme system for many ready
+      themes. Weigh the cost: it pulls a CSS framework and a build step. Only
+      adopt if the win justifies the weight.
+
+---
+
+## Chart and colour system
+
+Applies across the tree view, charts, panels and docs.
+
+- **Semantic colours, fixed everywhere:** added = green, modified = yellow,
+  removed = red.
+- **Risk intensity:** a sequential single-hue ramp (red). The lightest step must
+  keep enough contrast on the light theme.
+- **Theme-aware:** derive from `--vscode-*` variables, then override with accent
+  tokens. Light, dark and high-contrast all work without extra work.
+- **Style:** rounded bar corners, gradient area fills, subtle grid lines, quiet
+  axes. Keep the reference aesthetic in mind when implementing.
+
+## Open questions
+
+- Baseline default: proposed `auto`, with time buckets as the fallback. Confirm.
+- Vue without a bundler versus adding a small bundler. Proposed: no bundler
+  first.
+- Theme switcher via CSS tokens versus a UI kit. Proposed: tokens first.
