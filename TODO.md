@@ -69,29 +69,29 @@ Phase 1.
 
 A dedicated trend panel with charts, state shared with the tree.
 
-- [ ] **1.1 Shared state.** The extension owns a store; the sidebar and the
+- [x] **1.1 Shared state.** The extension owns a store; the sidebar and the
       trend panel both render from it. Selecting a file or folder in the tree
       filters the trend panel. Post updates as messages, not full re-renders.
-- [ ] **1.2 Charts (hand-rolled SVG, no chart library).**
+- [x] **1.2 Charts (hand-rolled SVG, no chart library).**
       - Delta vs Churn grouped bars, rounded corners, per period.
       - Stacked added / removed / modified bars (green / yellow / red).
       - Quarterly deletion-ratio trend (the AI-era question).
       - Cumulative churn as a gradient area chart.
-- [ ] **1.3 Info blocks.** Short explainer copy inline, linking to `docs/`.
-- [ ] **1.4 Risk panel.** Top-N highest-churn paths as a bar/timeline view.
+- [x] **1.3 Info blocks.** Short explainer copy inline, linking to `docs/`.
+- [x] **1.4 Risk panel.** Top-N highest-churn paths as a bar/timeline view.
       Click a bar to open the file. This is the "more risky" highlight.
-- [ ] **1.5 Commit-label grouping.** Parse Conventional Commit types
+- [x] **1.5 Commit-label grouping.** Parse Conventional Commit types
       (`type(scope)!: subject`). Group churn by type. Assign one colour per
       label from the configured list. Default to the Angular convention.
-- [ ] **1.6 Baseline / build strategy.**
+- [x] **1.6 Baseline / build strategy.**
       - Prefer semver tags as builds (closest to the paper's "builds").
       - Else merge commits into the default branch.
       - Else time buckets (week / quarter), which always exist.
       - Config `churnlens.baseline: auto | tags | merges | time`.
-- [ ] **1.7 Theme switcher.** Light, dark, high-contrast, plus a few accent
+- [x] **1.7 Theme switcher.** Light, dark, high-contrast, plus a few accent
       themes. Implement first with CSS-variable tokens. Evaluate a UI-kit theme
       system later (Phase 2) for the full multi-theme switch.
-- [ ] **1.8 Path prefix / grouping fix.** Apply the fix from the bug note.
+- [x] **1.8 Path prefix / grouping fix.** Apply the fix from the bug note.
 
 ---
 
