@@ -4,6 +4,7 @@ import { Logger } from './logger';
 import { isWithin } from './paths';
 import { DateRange } from './config';
 import { FileChurn, RawChange, parseNumstat, toFileChurnMap } from './parse';
+import { Boundary } from './series';
 
 const HEADER = '@@@';
 const SEP = '\u001f';
@@ -92,6 +93,36 @@ export class GitService {
 
   async getFileHistory(range: DateRange): Promise<Map<string, FileChurn>> {
     return (await this.getChurnData(range)).files;
+  }
+
+  async getBaselines(kind: 'tags' | 'merges'): Promise<Boundary[]> {
+    try {
+      const raw =
+        kind === 'tags'
+          ? await this.git.raw([
+              'for-each-ref',
+              '--sort=creatordate',
+              '--format=%(refname:short) %(creatordate:iso-strict)',
+              'refs/tags',
+            ])
+          : await this.git.raw(['log', '--merges', '--format=%cI%x1f%s']);
+
+      return raw
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line, index) => {
+          const splitAt = kind === 'tags' ? line.indexOf(' ') : line.indexOf(SEP);
+          const first = splitAt < 0 ? line : line.slice(0, splitAt);
+          const second = splitAt < 0 ? '' : line.slice(splitAt + 1);
+          const [label, date] = kind === 'tags' ? [first, second] : [second.slice(0, 48), first];
+          return { label: label || `point ${index}`, date: new Date(date) };
+        })
+        .filter((boundary) => !Number.isNaN(boundary.date.getTime()));
+    } catch (e) {
+      Logger.error('Error fetching baselines', e);
+      return [];
+    }
   }
 
   async getRemoteUrl(): Promise<string> {

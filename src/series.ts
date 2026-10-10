@@ -103,6 +103,60 @@ export function bucketByTime(records: RawChange[], granularity: Granularity): Ti
     .map(({ commitSet, ...bucket }) => ({ ...bucket, commits: commitSet.size }));
 }
 
+export interface Boundary {
+  label: string;
+  date: Date;
+}
+
+export function bucketByBoundaries(records: RawChange[], boundaries: Boundary[]): TimeBucket[] {
+  const sorted = [...boundaries].sort((a, b) => a.date.getTime() - b.date.getTime());
+  const order = ['before', ...sorted.map((_, index) => `${index}`)];
+  const buckets = new Map<string, TimeBucket & { commitSet: Set<string> }>();
+
+  const ensure = (key: string, label: string) => {
+    let bucket = buckets.get(key);
+    if (!bucket) {
+      bucket = {
+        key,
+        label,
+        added: 0,
+        deleted: 0,
+        churn: 0,
+        delta: 0,
+        commits: 0,
+        commitSet: new Set(),
+      };
+      buckets.set(key, bucket);
+    }
+    return bucket;
+  };
+
+  for (const record of records) {
+    const date = new Date(record.date);
+    if (Number.isNaN(date.getTime())) continue;
+
+    let index = -1;
+    for (let i = 0; i < sorted.length; i++) {
+      if (sorted[i].date.getTime() <= date.getTime()) index = i;
+      else break;
+    }
+
+    const key = index < 0 ? 'before' : `${index}`;
+    const label = index < 0 ? 'before' : sorted[index].label;
+    const bucket = ensure(key, label);
+    bucket.added += record.added;
+    bucket.deleted += record.deleted;
+    bucket.churn += record.added + record.deleted;
+    bucket.delta += record.added - record.deleted;
+    bucket.commitSet.add(record.commit);
+  }
+
+  return order
+    .map((key) => buckets.get(key))
+    .filter((bucket): bucket is TimeBucket & { commitSet: Set<string> } => Boolean(bucket))
+    .map(({ commitSet, ...bucket }) => ({ ...bucket, commits: commitSet.size }));
+}
+
 export function cumulative(points: TimeBucket[]): number[] {
   let running = 0;
   return points.map((point) => (running += point.churn));

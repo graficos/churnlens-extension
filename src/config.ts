@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 
 export type RangePreset = '2d' | '3d' | '7d' | '30d' | 'custom';
 
+export type Baseline = 'auto' | 'tags' | 'merges' | 'time';
+
 export interface DateRange {
   since: Date;
   until: Date;
@@ -64,5 +66,9 @@ export class ConfigManager {
 
   static getHideRoot(): boolean {
     return vscode.workspace.getConfiguration('churnlens').get('hideRoot', true);
+  }
+
+  static getBaseline(): Baseline {
+    return vscode.workspace.getConfiguration('churnlens').get<Baseline>('baseline', 'auto');
   }
 }

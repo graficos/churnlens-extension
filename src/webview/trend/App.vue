@@ -6,7 +6,7 @@ import Bars from '../chart/Bars.vue';
 import ChartCard from './ChartCard.vue';
 import LabelPanel from './LabelPanel.vue';
 import RiskPanel from './RiskPanel.vue';
-import type { RangePreset } from '../../protocol';
+import type { Baseline, RangePreset } from '../../protocol';
 
 const { state, post } = useStore();
 
@@ -72,6 +72,19 @@ function onMetric(value: 'churn' | 'delta') {
   post({ type: 'setMetric', value });
 }
 
+const baselines = [
+  { value: 'auto', label: 'Auto' },
+  { value: 'tags', label: 'Tags' },
+  { value: 'merges', label: 'Merges' },
+  { value: 'time', label: 'Time' },
+] as const;
+
+const baseline = computed(() => state.value?.baseline ?? 'auto');
+
+function onBaseline(event: Event) {
+  post({ type: 'setBaseline', value: (event.target as HTMLSelectElement).value as Baseline });
+}
+
 function onRiskOpen(path: string) {
   post({ type: 'select', path: selection.value === path ? null : path });
   post({ type: 'openFile', path });
@@ -111,6 +124,11 @@ function onRiskOpen(path: string) {
           Delta
         </button>
       </div>
+      <select :value="baseline" title="Baseline" @change="onBaseline">
+        <option v-for="option in baselines" :key="option.value" :value="option.value">
+          {{ option.label }}
+        </option>
+      </select>
       <span class="flex-1"></span>
       <span class="info" @click="post({ type: 'openInfo' })">
         <span class="codicon codicon-info"></span>info

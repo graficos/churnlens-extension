@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { RawChange } from './parse';
 import {
+  Boundary,
   autoGranularity,
+  bucketByBoundaries,
   bucketByTime,
   commitType,
   cumulative,
@@ -60,6 +62,23 @@ describe('bucketByTime', () => {
 
   it('skips unparseable dates', () => {
     expect(bucketByTime([raw('not-a-date', 'feat: x', 1, 0)], 'day')).toEqual([]);
+  });
+});
+
+describe('bucketByBoundaries', () => {
+  it('assigns records to the span after the latest boundary', () => {
+    const records = [
+      raw('2026-01-01T00:00:00Z', 'feat: a', 1, 0, 'c1'),
+      raw('2026-02-15T00:00:00Z', 'feat: b', 2, 0, 'c2'),
+      raw('2026-03-20T00:00:00Z', 'feat: c', 3, 0, 'c3'),
+    ];
+    const boundaries: Boundary[] = [
+      { label: 'v1', date: new Date('2026-02-01T00:00:00Z') },
+      { label: 'v2', date: new Date('2026-03-01T00:00:00Z') },
+    ];
+    const buckets = bucketByBoundaries(records, boundaries);
+    expect(buckets.map((b) => b.label)).toEqual(['before', 'v1', 'v2']);
+    expect(buckets.map((b) => b.churn)).toEqual([1, 2, 3]);
   });
 });
 

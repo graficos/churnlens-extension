@@ -184,6 +184,23 @@
           "type": "boolean",
           "default": true,
           "description": "Hide the root project folder from the Churn Explorer."
+        },
+        "churnlens.baseline": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "tags",
+            "merges",
+            "time"
+          ],
+          "enumDescriptions": [
+            "Semver tags, else merges, else time buckets",
+            "Bucket commits between semver tags",
+            "Bucket commits between merge commits",
+            "Bucket commits by day, week or month"
+          ],
+          "default": "auto",
+          "description": "How the trend groups churn into periods."
         }
       }
     }

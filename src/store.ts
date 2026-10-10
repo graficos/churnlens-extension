@@ -1,11 +1,16 @@
 import * as vscode from 'vscode';
 import { Metric } from './churn';
-import { ConfigManager } from './config';
+import { Baseline, ConfigManager } from './config';
 import { ChurnData, GitService } from './git';
 import { Logger } from './logger';
+import { RawChange } from './parse';
 import { Totals, ViewState } from './protocol';
 import {
+  Boundary,
+  Granularity,
+  TimeBucket,
   autoGranularity,
+  bucketByBoundaries,
   bucketByTime,
   cumulative,
   groupByLabel,
@@ -42,6 +47,7 @@ export class ChurnStore {
       start: '',
       end: '',
       selection: null,
+      baseline: 'auto',
       totals: { added: 0, deleted: 0, churn: 0, delta: 0, commits: 0 },
       tree: [],
       series: [],
@@ -85,6 +91,7 @@ export class ChurnStore {
     const range = ConfigManager.getRange();
     const hideRoot = ConfigManager.getHideRoot();
     const labels = ConfigManager.getCommitLabels();
+    const baseline = ConfigManager.getBaseline();
     // Relative presets keep a stable key; a new commit (HEAD change) busts it.
     // ponytail: a commit ageing out of the window without a HEAD change stays
     // cached until the next commit or reload — fine for a read-only view.
@@ -108,7 +115,7 @@ export class ChurnStore {
 
       const scoped = selectRecords(data.records, this.rootPath, this.selection);
       const granularity = autoGranularity(range.since, range.until);
-      const series = bucketByTime(scoped, granularity);
+      const series = await this.seriesFor(scoped, baseline, granularity);
 
       this.state = {
         status: 'ready',
@@ -117,6 +124,7 @@ export class ChurnStore {
         start: toDateInput(range.since),
         end: toDateInput(range.until),
         selection: this.selection,
+        baseline,
         totals: totalsOf(scoped),
         tree: buildTree(data.files, this.rootPath, hideRoot),
         series,
@@ -130,6 +138,26 @@ export class ChurnStore {
       this.state = { ...this.state, status: 'error' };
       this._onDidChange.fire(this.state);
     }
+  }
+
+  private async seriesFor(
+    records: RawChange[],
+    baseline: Baseline,
+    granularity: Granularity,
+  ): Promise<TimeBucket[]> {
+    if (baseline === 'time') {
+      return bucketByTime(records, granularity);
+    }
+
+    const kind = baseline === 'auto' ? 'tags' : baseline;
+    let boundaries: Boundary[] = await this.git.getBaselines(kind);
+    if (baseline === 'auto' && boundaries.length < 2) {
+      boundaries = await this.git.getBaselines('merges');
+    }
+
+    return boundaries.length >= 2
+      ? bucketByBoundaries(records, boundaries)
+      : bucketByTime(records, granularity);
   }
 }
 
