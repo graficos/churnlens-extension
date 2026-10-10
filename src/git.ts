@@ -3,10 +3,16 @@ import * as path from 'path';
 import { Logger } from './logger';
 import { isWithin } from './paths';
 import { DateRange } from './config';
-import { FileChurn, parseNumstat, toFileChurnMap } from './parse';
+import { FileChurn, RawChange, parseNumstat, toFileChurnMap } from './parse';
 
 const HEADER = '@@@';
 const SEP = '\u001f';
+
+export interface ChurnData {
+  records: RawChange[];
+  files: Map<string, FileChurn>;
+  head: string;
+}
 
 export function formatGitDate(date: Date): string {
   const pad = (value: number) => String(value).padStart(2, '0');
@@ -50,8 +56,9 @@ export class GitService {
     }
   }
 
-  async getFileHistory(range: DateRange): Promise<Map<string, FileChurn>> {
+  async getChurnData(range: DateRange): Promise<ChurnData> {
     const repoRoot = await this.getRepoRoot();
+    const head = await this.getHead();
     const since = formatGitDate(range.since);
     const until = formatGitDate(range.until);
 
@@ -67,25 +74,24 @@ export class GitService {
         `--pretty=format:${HEADER}%H${SEP}%an${SEP}%cI${SEP}%s`,
       ]);
 
-      const records = parseNumstat(raw);
-      const repoMap = toFileChurnMap(records, (filePath) => path.resolve(repoRoot, filePath));
+      const parsed = parseNumstat(raw);
+      const records = parsed
+        .map((record) => ({ ...record, path: path.resolve(repoRoot, record.path) }))
+        .filter((record) => isWithin(this.rootPath, record.path));
 
-      const workspaceMap = new Map<string, FileChurn>();
-      for (const [absPath, entry] of repoMap) {
-        if (isWithin(this.rootPath, absPath)) {
-          workspaceMap.set(absPath, entry);
-        }
-      }
+      const files = toFileChurnMap(records, (filePath) => filePath);
 
-      Logger.log(
-        `Processed ${records.length} file changes across ${workspaceMap.size} unique files.`,
-      );
+      Logger.log(`Processed ${records.length} file changes across ${files.size} unique files.`);
 
-      return workspaceMap;
+      return { records, files, head };
     } catch (e) {
       Logger.error('Error fetching git history:', e);
-      return new Map();
+      return { records: [], files: new Map(), head };
     }
+  }
+
+  async getFileHistory(range: DateRange): Promise<Map<string, FileChurn>> {
+    return (await this.getChurnData(range)).files;
   }
 
   async getRemoteUrl(): Promise<string> {
