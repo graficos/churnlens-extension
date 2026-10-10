@@ -5,6 +5,19 @@ import { ChurnSidebarProvider } from './sidebar/ChurnSidebarProvider';
 import { ConfigPanel } from './webview/ConfigPanel';
 
 export function activate(context: vscode.ExtensionContext) {
+  try {
+    activateInternal(context);
+  } catch (e) {
+    console.error('ChurnLens: activation failed', e);
+    vscode.window.showErrorMessage(
+      `ChurnLens failed to activate: ${
+        e instanceof Error ? e.message : String(e)
+      }`
+    );
+  }
+}
+
+function activateInternal(context: vscode.ExtensionContext) {
   console.log('ChurnLens is now active!');
 
   if (!vscode.workspace.workspaceFolders) {
@@ -91,14 +104,30 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(refreshDisposable);
   context.subscriptions.push(openInGithubDisposable);
 
-  // Listen for configuration changes
+  // Listen for configuration changes (debounced: one refresh per burst)
+  let refreshTimer: NodeJS.Timeout | undefined;
+  const scheduleRefresh = () => {
+    if (refreshTimer) {
+      clearTimeout(refreshTimer);
+    }
+    refreshTimer = setTimeout(() => sidebarProvider.refresh(), 150);
+  };
+
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (
-        e.affectsConfiguration('churnlens.periodDays') ||
+        e.affectsConfiguration('churnlens.rangePreset') ||
+        e.affectsConfiguration('churnlens.rangeStart') ||
+        e.affectsConfiguration('churnlens.rangeEnd') ||
+        e.affectsConfiguration('churnlens.commitLabels') ||
         e.affectsConfiguration('churnlens.hideRoot')
       ) {
-        sidebarProvider.refresh();
+        scheduleRefresh();
+      }
+    }),
+    new vscode.Disposable(() => {
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
       }
     })
   );

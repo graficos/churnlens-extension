@@ -1,14 +1,18 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { ChurnCalculator } from '../churn';
+import { ChurnAggregate, ChurnCalculator, Metric } from '../churn';
 import { ConfigManager } from '../config';
 import { GitService } from '../git';
 import { Logger } from '../logger';
+import { isWithin } from '../paths';
 
 interface FileNode {
   name: string;
   path: string;
-  count: number;
+  churn: number;
+  delta: number;
+  added: number;
+  deleted: number;
   level: number;
   children?: { [key: string]: FileNode };
   isDir: boolean;
@@ -17,6 +21,7 @@ interface FileNode {
 export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'churnlens.sidebar';
   private _view?: vscode.WebviewView;
+  private _metric: Metric = 'churn';
 
   constructor(
     private readonly _extensionUri: vscode.Uri,
@@ -25,12 +30,11 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
-    context: vscode.WebviewViewResolveContext,
+    _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ) {
     this._view = webviewView;
 
-    // Refresh when view becomes visible
     webviewView.onDidChangeVisibility(() => {
       if (webviewView.visible) {
         this.refresh();
@@ -44,7 +48,6 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.html = this._getHtmlForWebview();
 
-    // Listen for messages from the sidebar
     webviewView.webview.onDidReceiveMessage((data) => {
       switch (data.type) {
         case 'ready':
@@ -59,26 +62,51 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
         case 'openSettings':
           vscode.commands.executeCommand('churnlens.openConfig');
           break;
-        case 'updatePeriod':
-          this.updatePeriod(data.value);
+        case 'openInfo':
+          this.openInfo();
+          break;
+        case 'setPreset':
+          this.updateSetting('rangePreset', data.value);
+          break;
+        case 'setCustomRange':
+          this.setCustomRange(data.start, data.end);
+          break;
+        case 'setMetric':
+          this._metric = data.value === 'delta' ? 'delta' : 'churn';
+          this.refresh();
           break;
       }
     });
-
-    // Initial load - triggered by 'ready' event or manually here fallback
-    // this.refresh();
   }
 
   private openFile(filePath: string) {
-    const openPath = vscode.Uri.file(filePath);
-    vscode.window.showTextDocument(openPath);
+    vscode.window.showTextDocument(vscode.Uri.file(filePath));
   }
 
-  private async updatePeriod(days: number) {
+  private openInfo() {
+    const docUri = vscode.Uri.joinPath(
+      this._extensionUri,
+      'docs',
+      'churn-and-delta.md'
+    );
+    vscode.window.showTextDocument(docUri, { preview: true });
+  }
+
+  private async updateSetting(key: string, value: unknown) {
     await vscode.workspace
       .getConfiguration('churnlens')
-      .update('periodDays', days, vscode.ConfigurationTarget.Global);
-    // Refresh will be triggered by the configuration change listener in extension.ts
+      .update(key, value, vscode.ConfigurationTarget.Global);
+  }
+
+  private async setCustomRange(start: string, end: string) {
+    const config = vscode.workspace.getConfiguration('churnlens');
+    await config.update('rangeStart', start, vscode.ConfigurationTarget.Global);
+    await config.update('rangeEnd', end, vscode.ConfigurationTarget.Global);
+    await config.update(
+      'rangePreset',
+      'custom',
+      vscode.ConfigurationTarget.Global
+    );
   }
 
   public async refresh() {
@@ -86,43 +114,36 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
       return;
     }
 
-    Logger.log('Refreshing Churn Sidebar...');
-    const days = ConfigManager.getPeriodDays();
-    // Access config directly as I haven't added getter to ConfigManager yet
-    const hideRoot = vscode.workspace
-      .getConfiguration('churnlens')
-      .get('hideRoot', true);
+    this._view.webview.postMessage({ type: 'loading' });
+
+    const range = ConfigManager.getRange();
+    const hideRoot = ConfigManager.getHideRoot();
 
     try {
-      const rawFileCounts = await this.gitService.getFileHistory(days);
+      const files = await this.gitService.getFileHistory(range);
+      const rootPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
 
-      let rootPath = '';
-      if (vscode.workspace.workspaceFolders) {
-        rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-      }
+      const items = ChurnCalculator.aggregate(files, rootPath);
+      const levels = ChurnCalculator.levels(items);
 
-      const { levels, counts } = ChurnCalculator.calculate(
-        rawFileCounts,
-        rootPath
-      );
-
-      // Build Tree
       const tree: FileNode = {
         name: 'root',
         path: rootPath,
-        count: counts.get(rootPath) || 0,
+        churn: 0,
+        delta: 0,
+        added: 0,
+        deleted: 0,
         level: levels.get(rootPath) || 0,
         children: {},
         isDir: true,
       };
 
-      // Populate tree
-      for (const [filePath, count] of counts.entries()) {
-        if (filePath === rootPath) continue; // Already at root
+      for (const itemPath of items.keys()) {
+        if (itemPath === rootPath || !isWithin(rootPath, itemPath)) {
+          continue;
+        }
 
-        // Make relative path
-        if (!filePath.startsWith(rootPath)) continue;
-        const relPath = filePath.substring(rootPath.length + 1);
+        const relPath = itemPath.substring(rootPath.length + 1);
         const parts = relPath.split(path.sep);
 
         let currentNode = tree;
@@ -132,82 +153,66 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
           const part = parts[i];
           currentPath = path.join(currentPath, part);
 
-          if (!currentNode.children) currentNode.children = {};
+          if (!currentNode.children) {
+            currentNode.children = {};
+          }
 
           if (!currentNode.children[part]) {
-            // Level/Count might be missing if ChurnCalculator didn't aggregate (it should have)
-            // But ChurnCalculator aggregates ALL parents.
-            const nodeCount = counts.get(currentPath) || 0;
-            const nodeLevel = levels.get(currentPath) || 0;
-
+            const aggregate: ChurnAggregate | undefined = items.get(currentPath);
             currentNode.children[part] = {
               name: part,
               path: currentPath,
-              count: nodeCount,
-              level: nodeLevel,
-              children:
-                i === parts.length - 1 && !rawFileCounts.has(currentPath)
-                  ? {}
-                  : undefined, // Heuristic: if it's in rawFileCounts, it's a file? No, raw could have folders? No git log --name-only is files.
-              // If rawFileCounts has it, it is a file.
-              isDir: !rawFileCounts.has(currentPath),
+              churn: aggregate?.churn ?? 0,
+              delta: aggregate?.delta ?? 0,
+              added: aggregate?.added ?? 0,
+              deleted: aggregate?.deleted ?? 0,
+              level: levels.get(currentPath) || 0,
+              children: {},
+              isDir: !files.has(currentPath),
             };
           }
           currentNode = currentNode.children[part];
         }
       }
 
-      // If hideRoot is true, we send the children of root as the top level list
-      let rootNodes: FileNode[] = [];
-      if (hideRoot && tree.children) {
-        rootNodes = Object.values(tree.children);
-      } else {
-        rootNodes = [tree];
-      }
+      const rootNodes = hideRoot ? Object.values(tree.children || {}) : [tree];
+      const data = this.serialize(rootNodes);
 
-      // Sort? Folders first? High Churn first?
-      // Let's sort by Churn Count Descending
-      const sortNodes = (nodes: FileNode[]) => {
-        nodes.sort((a, b) => b.count - a.count);
-        nodes.forEach((n) => {
-          if (n.children) {
-            sortNodes(Object.values(n.children)); // Just sorting the array we'd create?
-            // Wait, children is object. We need to convert to array for transport or let JS handle it.
-            // Let's recursively convert children map to sorted array properly for the view
-          }
-        });
-      };
-
-      // We need a proper recursive structure for JSON transport
-      const serialize = (nodes: FileNode[]): any[] => {
-        return nodes
-          .sort((a, b) => b.count - a.count)
-          .map((n) => ({
-            name: n.name,
-            path: n.path,
-            count: n.count,
-            level: n.level,
-            isDir: n.isDir,
-            children: n.children ? serialize(Object.values(n.children)) : [],
-          }));
-      };
-
-      const data = serialize(rootNodes);
-
-      // Include period in update so input can sync
       this._view.webview.postMessage({
         type: 'update',
         files: data,
-        period: days,
+        metric: this._metric,
+        preset: range.preset,
+        start: toDateInput(range.since),
+        end: toDateInput(range.until),
       });
     } catch (e) {
       Logger.error('Error refreshing sidebar', e);
+      this._view.webview.postMessage({ type: 'error' });
     }
   }
 
+  private serialize(nodes: FileNode[]): any[] {
+    return nodes
+      .sort((a, b) => this.metricValue(b) - this.metricValue(a))
+      .map((n) => ({
+        name: n.name,
+        path: n.path,
+        churn: n.churn,
+        delta: n.delta,
+        added: n.added,
+        deleted: n.deleted,
+        level: n.level,
+        isDir: n.isDir,
+        children: n.children ? this.serialize(Object.values(n.children)) : [],
+      }));
+  }
+
+  private metricValue(node: FileNode): number {
+    return this._metric === 'delta' ? node.delta : node.churn;
+  }
+
   private _getHtmlForWebview() {
-    // Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
-    // We also need the codicons CSS
     const codiconsUri = this._view?.webview.asWebviewUri(
       vscode.Uri.joinPath(
         this._extensionUri,
@@ -217,6 +222,8 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
         'codicon.css'
       )
     );
+
+    const preset = ConfigManager.getRange().preset;
 
     return `<!DOCTYPE html>
       <html lang="en">
@@ -236,32 +243,53 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
             .toolbar {
               padding: 6px 10px;
               display: flex;
-              justify-content: space-between;
-              align-items: center;
+              flex-direction: column;
+              gap: 6px;
               border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
               font-size: 0.8rem;
             }
-            .period-container {
+            .row {
               display: flex;
               align-items: center;
               gap: 5px;
             }
-            input[type=number] {
+            .spacer {
+              flex: 1;
+            }
+            select,
+            input[type='date'] {
               background: var(--vscode-input-background);
               color: var(--vscode-input-foreground);
               border: 1px solid var(--vscode-input-border);
-              width: 40px;
               padding: 2px 4px;
               outline: none;
+              font-family: inherit;
+              font-size: inherit;
             }
-            input[type=number]:focus {
+            select:focus,
+            input[type='date']:focus {
               border-color: var(--vscode-focusBorder);
             }
-            .actions {
+            #custom {
               display: flex;
               gap: 4px;
             }
-            .toolbar button {
+            [hidden] {
+              display: none !important;
+            }
+            .info {
+              display: inline-flex;
+              align-items: center;
+              gap: 4px;
+              cursor: pointer;
+              color: var(--vscode-textLink-foreground);
+              border-bottom: 1px solid transparent;
+              padding-bottom: 1px;
+            }
+            .info:hover {
+              border-bottom-color: currentColor;
+            }
+            .actions button {
               background: none;
               border: none;
               color: var(--vscode-icon-foreground);
@@ -270,14 +298,12 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
               padding: 2px 4px;
               border-radius: 3px;
             }
-            .toolbar button:hover {
+            .actions button:hover {
               background-color: var(--vscode-button-hoverBackground);
             }
-
             #tree-root {
               padding: 10px;
             }
-
             ul {
               list-style: none;
               padding: 0;
@@ -287,7 +313,6 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
               margin: 0;
               padding: 0;
             }
-
             .node {
               display: flex;
               justify-content: space-between;
@@ -301,34 +326,19 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
             .node:hover {
               background-color: var(--vscode-list-hoverBackground);
             }
-
-            /* Indentation guide? No, just nested lists */
             ul ul {
               padding-left: 10px;
               border-left: 1px solid var(--vscode-tree-indentGuidesStroke);
             }
-
-            /* Churn Levels (Left Border) for the ROW */
-            .level-1 {
-              border-left: 3px solid #90ee90;
-            }
-            .level-2 {
-              border-left: 3px solid #adff2f;
-            }
-            .level-3 {
-              border-left: 3px solid #ffd700;
-            }
-            .level-4 {
-              border-left: 3px solid #ffa500;
-            }
-            .level-5 {
-              border-left: 3px solid #ff4500;
-            }
+            .level-1 { border-left: 3px solid #90ee90; }
+            .level-2 { border-left: 3px solid #adff2f; }
+            .level-3 { border-left: 3px solid #ffd700; }
+            .level-4 { border-left: 3px solid #ffa500; }
+            .level-5 { border-left: 3px solid #ff4500; }
             .level-6 {
               border-left: 3px solid #ff0000;
               background-color: rgba(255, 0, 0, 0.1);
             }
-
             .icon {
               margin-right: 5px;
               font-size: 16px;
@@ -344,15 +354,12 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
               font-size: 0.8em;
               opacity: 0.7;
             }
-
             details > summary {
               list-style: none;
             }
             details > summary::-webkit-details-marker {
               display: none;
             }
-
-            /* Arrow */
             .arrow {
               display: inline-block;
               width: 16px;
@@ -367,118 +374,188 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
               opacity: 0;
               pointer-events: none;
             }
+            .spinner {
+              width: 18px;
+              height: 18px;
+              border: 2px solid var(--vscode-foreground);
+              border-top-color: transparent;
+              border-radius: 50%;
+              opacity: 0.6;
+              animation: spin 0.8s linear infinite;
+            }
+            @keyframes spin {
+              to { transform: rotate(360deg); }
+            }
+            .loading {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              padding: 10px;
+              opacity: 0.8;
+            }
           </style>
         </head>
         <body>
           <div class="toolbar">
-            <div class="period-container">
-              Period: <input type="number" id="period-input" value="${ConfigManager.getPeriodDays()}" min="1" onchange="updatePeriod()" onblur="updatePeriod()" /> days
+            <div class="row">
+              <span>Range</span>
+              <select id="preset" onchange="onPresetChange()">
+                <option value="2d">2 days</option>
+                <option value="3d">3 days</option>
+                <option value="7d">7 days</option>
+                <option value="30d">30 days</option>
+                <option value="custom">Custom</option>
+              </select>
+              <span id="custom" hidden>
+                <input type="date" id="range-start" onchange="onRangeChange()" />
+                <input type="date" id="range-end" onchange="onRangeChange()" />
+              </span>
             </div>
-            <div class="actions">
-              <button title="Refresh" onclick="refresh()">🔃</button>
-              <button title="Settings" onclick="openSettings()">⚙️</button>
+            <div class="row">
+              <span>Metric</span>
+              <select id="metric" onchange="onMetricChange()">
+                <option value="churn">Churn</option>
+                <option value="delta">Delta</option>
+              </select>
+              <span class="info" onclick="openInfo()" title="What are churn and delta?">
+                <i class="codicon codicon-info"></i><span class="info-label">info</span>
+              </span>
+              <span class="spacer"></span>
+              <span class="actions">
+                <button title="Refresh" onclick="refresh()"><i class="codicon codicon-refresh"></i></button>
+                <button title="Settings" onclick="openSettings()"><i class="codicon codicon-settings-gear"></i></button>
+              </span>
             </div>
           </div>
-          <div id="tree-root">Loading...</div>
+          <div id="tree-root">
+            <div class="loading"><span class="spinner"></span> Loading...</div>
+          </div>
 
           <script>
             const vscode = acquireVsCodeApi();
-
-            // Notify extension that we are ready
             vscode.postMessage({ type: 'ready' });
 
             function refresh() {
               vscode.postMessage({ type: 'refresh' });
             }
-
             function openSettings() {
               vscode.postMessage({ type: 'openSettings' });
             }
-
-            function updatePeriod() {
-              const val = document.getElementById('period-input').value;
-              vscode.postMessage({ type: 'updatePeriod', value: parseInt(val) });
+            function openInfo() {
+              vscode.postMessage({ type: 'openInfo' });
+            }
+            function onPresetChange() {
+              const value = document.getElementById('preset').value;
+              toggleCustom();
+              vscode.postMessage({ type: 'setPreset', value: value });
+            }
+            function onRangeChange() {
+              const start = document.getElementById('range-start').value;
+              const end = document.getElementById('range-end').value;
+              vscode.postMessage({ type: 'setCustomRange', start: start, end: end });
+            }
+            function onMetricChange() {
+              const value = document.getElementById('metric').value;
+              vscode.postMessage({ type: 'setMetric', value: value });
+            }
+            function toggleCustom() {
+              const isCustom =
+                document.getElementById('preset').value === 'custom';
+              document.getElementById('custom').hidden = !isCustom;
             }
 
             window.addEventListener('message', (event) => {
-              if (event.data.type === 'update') {
-                if (event.data.period) {
-                  document.getElementById('period-input').value = event.data.period;
+              const data = event.data;
+              if (data.type === 'loading') {
+                renderLoading();
+                return;
+              }
+              if (data.type === 'update') {
+                document.getElementById('preset').value = data.preset;
+                document.getElementById('metric').value = data.metric;
+                if (data.start) {
+                  document.getElementById('range-start').value = data.start;
                 }
-                renderTree(event.data.files);
+                if (data.end) {
+                  document.getElementById('range-end').value = data.end;
+                }
+                toggleCustom();
+                renderTree(data.files, data.metric);
+                return;
+              }
+              if (data.type === 'error') {
+                document.getElementById('tree-root').innerHTML =
+                  '<div style="padding:10px">Could not read git history.</div>';
               }
             });
 
-            function renderTree(nodes) {
+            function renderLoading() {
+              document.getElementById('tree-root').innerHTML =
+                '<div class="loading"><span class="spinner"></span> Loading...</div>';
+            }
+
+            function formatValue(node, metric) {
+              const value = metric === 'delta' ? node.delta : node.churn;
+              if (metric === 'delta' && value > 0) return '+' + value;
+              return String(value);
+            }
+
+            function renderTree(nodes, metric) {
               const root = document.getElementById('tree-root');
               root.innerHTML = '';
-              if (nodes.length === 0) {
+              if (!nodes || nodes.length === 0) {
                 root.innerHTML =
-                  '<div style="padding:10px">No churn data. Try selecting a longer period of time.</div>';
+                  '<div style="padding:10px">No churn data in this range. Try a longer period.</div>';
                 return;
               }
-              root.appendChild(createList(nodes));
+              root.appendChild(createList(nodes, metric));
             }
 
             function getIconClass(name, isDir) {
               if (isDir) return 'codicon codicon-folder';
-              if (
-                name.endsWith('.ts') ||
-                name.endsWith('.js') ||
-                name.endsWith('.jsx') ||
-                name.endsWith('.tsx')
-              )
+              if (/\\.(ts|js|jsx|tsx|json|xml|yml)$/.test(name))
                 return 'codicon codicon-file-code';
-              if (
-                name.endsWith('.json') ||
-                name.endsWith('.xml') ||
-                name.endsWith('.yml')
-              )
-                return 'codicon codicon-file-code'; // No specific JSON icon in basic set?
-              if (name.endsWith('.md') || name.endsWith('.txt'))
-                return 'codicon codicon-file-text';
-              if (
-                name.endsWith('.png') ||
-                name.endsWith('.jpg') ||
-                name.endsWith('.svg')
-              )
+              if (/\\.(md|txt)$/.test(name)) return 'codicon codicon-file-text';
+              if (/\\.(png|jpg|jpeg|gif|svg)$/.test(name))
                 return 'codicon codicon-file-media';
-              if (name.endsWith('.zip') || name.endsWith('.tar'))
-                return 'codicon codicon-file-zip';
-              if (name.endsWith('.pdf')) return 'codicon codicon-file-pdf';
+              if (/\\.(zip|tar|gz)$/.test(name)) return 'codicon codicon-file-zip';
+              if (/\\.pdf$/.test(name)) return 'codicon codicon-file-pdf';
               return 'codicon codicon-file';
             }
 
-            function createList(nodes) {
+            function createList(nodes, metric) {
               const ul = document.createElement('ul');
               nodes.forEach((node) => {
                 const li = document.createElement('li');
+                const contextValue = JSON.stringify({
+                  webviewSection: 'fileItem',
+                  path: node.path,
+                });
+                const value = formatValue(node, metric);
 
-                const contextValue = JSON.stringify({ webviewSection: 'fileItem', path: node.path });
-                
-                // Content Row
-                // Using details/summary for folders
                 if (node.isDir && node.children && node.children.length > 0) {
                   const details = document.createElement('details');
-
-
                   const summary = document.createElement('summary');
                   summary.className = 'node level level-' + node.level;
                   summary.setAttribute('data-vscode-context', contextValue);
-
-                  summary.innerHTML = \`<span class="arrow">▶</span> <span class="icon codicon codicon-folder"></span> <span class="name">\${node.name}</span> <span class="count">\${node.count}</span>\`;
-
+                  summary.innerHTML =
+                    '<span class="arrow">&#9654;</span> ' +
+                    '<span class="icon codicon codicon-folder"></span> ' +
+                    '<span class="name">' + escapeHtml(node.name) + '</span> ' +
+                    '<span class="count">' + value + '</span>';
                   details.appendChild(summary);
-                  details.appendChild(createList(node.children)); // Recursion
+                  details.appendChild(createList(node.children, metric));
                   li.appendChild(details);
                 } else {
-                  // File
                   const a = document.createElement('a');
                   a.className = 'node level level-' + node.level;
                   a.href = '#';
                   a.setAttribute('data-vscode-context', contextValue);
-                  const iconClass = getIconClass(node.name, false);
-                  a.innerHTML = \`<span class="arrow empty"></span> <span class="icon \${iconClass}"></span> <span class="name">\${node.name}</span> <span class="count">\${node.count}</span>\`;
+                  a.innerHTML =
+                    '<span class="arrow empty"></span> ' +
+                    '<span class="icon ' + getIconClass(node.name, false) + '"></span> ' +
+                    '<span class="name">' + escapeHtml(node.name) + '</span> ' +
+                    '<span class="count">' + value + '</span>';
                   a.onclick = (e) => {
                     e.preventDefault();
                     vscode.postMessage({ type: 'openFile', path: node.path });
@@ -489,8 +566,19 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
               });
               return ul;
             }
+
+            function escapeHtml(text) {
+              const div = document.createElement('div');
+              div.textContent = text;
+              return div.innerHTML;
+            }
           </script>
         </body>
       </html>`;
   }
+}
+
+function toDateInput(date: Date): string {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
