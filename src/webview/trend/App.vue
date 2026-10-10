@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useStore } from '../composables/useStore';
+import Area from '../chart/Area.vue';
+import Bars from '../chart/Bars.vue';
 import ChartCard from './ChartCard.vue';
 import type { RangePreset } from '../../protocol';
 
@@ -44,6 +46,18 @@ const deltaVsChurn = computed(() => [
 const composition = computed(() => [
   { name: 'Added', color: 'var(--chart-added)', values: series.value.map((p) => p.added) },
   { name: 'Removed', color: 'var(--chart-deleted)', values: series.value.map((p) => p.deleted) },
+]);
+
+const cumulative = computed(() => state.value?.cumulative ?? []);
+
+const deletionRatio = computed(() => [
+  {
+    name: 'Deletion ratio',
+    color: 'var(--chart-deleted)',
+    values: series.value.map((p) =>
+      p.added === 0 ? (p.deleted === 0 ? 0 : 1) : p.deleted / p.added,
+    ),
+  },
 ]);
 
 function onPreset(event: Event) {
@@ -146,6 +160,22 @@ function onMetric(value: 'churn' | 'delta') {
           :series="composition"
           stacked
         />
+        <section class="card">
+          <h2>Cumulative churn</h2>
+          <p>Running total of churn across the range.</p>
+          <Area :labels="labels" :values="cumulative" />
+        </section>
+        <section class="card">
+          <h2>Deletion ratio</h2>
+          <p>Removed divided by added per period — rework pressure.</p>
+          <Bars :labels="labels" :series="deletionRatio" :height="180" />
+        </section>
+        <p class="text-sm opacity-70">
+          Churn is total line movement, the risk signal. Delta is net growth. Read the
+          <button class="underline" @click="post({ type: 'openInfo' })">
+            churn and delta explainer</button
+          >.
+        </p>
       </template>
     </template>
   </main>
