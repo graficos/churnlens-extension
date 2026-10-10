@@ -10,9 +10,7 @@ export function activate(context: vscode.ExtensionContext) {
   } catch (e) {
     console.error('ChurnLens: activation failed', e);
     vscode.window.showErrorMessage(
-      `ChurnLens failed to activate: ${
-        e instanceof Error ? e.message : String(e)
-      }`
+      `ChurnLens failed to activate: ${e instanceof Error ? e.message : String(e)}`,
     );
   }
 }
@@ -28,32 +26,20 @@ function activateInternal(context: vscode.ExtensionContext) {
   const gitService = new GitService(rootPath);
 
   // Register Sidebar
-  const sidebarProvider = new ChurnSidebarProvider(
-    context.extensionUri,
-    gitService
-  );
+  const sidebarProvider = new ChurnSidebarProvider(context.extensionUri, gitService);
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(
-      ChurnSidebarProvider.viewType,
-      sidebarProvider
-    )
+    vscode.window.registerWebviewViewProvider(ChurnSidebarProvider.viewType, sidebarProvider),
   );
 
-  let disposable = vscode.commands.registerCommand(
-    'churnlens.openConfig',
-    () => {
-      ConfigPanel.createOrShow(context.extensionUri);
-    }
-  );
+  let disposable = vscode.commands.registerCommand('churnlens.openConfig', () => {
+    ConfigPanel.createOrShow(context.extensionUri);
+  });
 
-  let refreshDisposable = vscode.commands.registerCommand(
-    'churnlens.refresh',
-    () => {
-      // Refresh sidebar
-      sidebarProvider.refresh();
-      vscode.window.showInformationMessage('ChurnLens: Refreshed churn stats.');
-    }
-  );
+  let refreshDisposable = vscode.commands.registerCommand('churnlens.refresh', () => {
+    // Refresh sidebar
+    void sidebarProvider.refresh();
+    vscode.window.showInformationMessage('ChurnLens: Refreshed churn stats.');
+  });
 
   let openInGithubDisposable = vscode.commands.registerCommand(
     'churnlens.openInGithub',
@@ -66,9 +52,7 @@ function activateInternal(context: vscode.ExtensionContext) {
       try {
         const remoteUrl = await gitService.getRemoteUrl();
         if (!remoteUrl) {
-          vscode.window.showErrorMessage(
-            'ChurnLens: Could not find git remote URL.'
-          );
+          vscode.window.showErrorMessage('ChurnLens: Could not find git remote URL.');
           return;
         }
 
@@ -92,12 +76,10 @@ function activateInternal(context: vscode.ExtensionContext) {
 
         vscode.env.openExternal(vscode.Uri.parse(finalUrl));
       } catch (e) {
-        vscode.window.showErrorMessage(
-          'ChurnLens: Error opening GitHub history.'
-        );
+        vscode.window.showErrorMessage('ChurnLens: Error opening GitHub history.');
         console.error(e);
       }
-    }
+    },
   );
 
   context.subscriptions.push(disposable);
@@ -110,7 +92,7 @@ function activateInternal(context: vscode.ExtensionContext) {
     if (refreshTimer) {
       clearTimeout(refreshTimer);
     }
-    refreshTimer = setTimeout(() => sidebarProvider.refresh(), 150);
+    refreshTimer = setTimeout(() => void sidebarProvider.refresh(), 150);
   };
 
   context.subscriptions.push(
@@ -129,7 +111,7 @@ function activateInternal(context: vscode.ExtensionContext) {
       if (refreshTimer) {
         clearTimeout(refreshTimer);
       }
-    })
+    }),
   );
 }
 

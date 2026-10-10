@@ -13,10 +13,7 @@ export interface ChurnAggregate {
 export type Metric = 'churn' | 'delta';
 
 export class ChurnCalculator {
-  static aggregate(
-    files: Map<string, FileChurn>,
-    rootPath: string
-  ): Map<string, ChurnAggregate> {
+  static aggregate(files: Map<string, FileChurn>, rootPath: string): Map<string, ChurnAggregate> {
     const items = new Map<string, ChurnAggregate>();
 
     const getOrCreate = (key: string): ChurnAggregate => {
