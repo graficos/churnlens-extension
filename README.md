@@ -9,7 +9,7 @@
   <h3 align="center">ChurnLens</h3>
 </div>
 
-**ChurnLens** helps you identify "hotspots" in your codebase by visualizing Code Churn directly in the IDE. Files that change frequently are highlighted with different colors in a custom "Churn Explorer" sidebar, allowing you to spot potential areas of instability, high churn or high maintenance at a glance.
+**ChurnLens** helps you identify "hotspots" in your codebase by visualizing Code Churn directly in the IDE. Files that change frequently are highlighted with different colors in a custom "Churn Explorer" sidebar, allowing you to spot potential areas of instability, high churn or high maintenance at a glance. A companion **Trend** panel charts that churn over time.
 
 ## Churn and Delta
 
@@ -45,10 +45,28 @@ This extension is inspired by the research on Code Churn as a predictor of defec
 ![ChurnLens](https://github.com/graficos/churnlens-extension/blob/main/public/screenshot.png?raw=true)
 
 - **Churn Explorer**: A dedicated sidebar exploring the churn of your project with a tree view.
+- **Trend view**: A dedicated panel with charts — churn over time, added vs removed, cumulative churn, deletion ratio, and churn grouped by commit type.
 - **Churn and Delta**: Switch the metric you are looking at. Churn measures total movement, delta measures net change.
 - **Date range**: Presets for the last 2, 3, 7 or 30 days, plus a custom start and end date.
+- **Baseline grouping**: Group the trend by semver tags, merge commits or time buckets.
+- **Risk panel**: The top files by churn, as proportional bars. Click one to open the file.
 - **Context Menu Integration**: Right-click on any file in the Churn Explorer to view its **Git history in GitHub**.
 - **Light on resources**: Git is read only while a ChurnLens view is open. The extension does not start at editor startup.
+
+## Trend View
+
+Run the command `ChurnLens: Open Trend` (or the chart button in the Churn Explorer toolbar) to open the trend panel. It shares its state with the sidebar: selecting a file or folder in the tree filters the trend, and clearing the selection restores the whole range.
+
+The panel shows:
+
+- **Delta vs Churn** — grouped bars per period.
+- **Composition** — added and removed lines, stacked.
+- **Cumulative churn** — the running total across the range.
+- **Deletion ratio** — removed divided by added, the rework signal.
+- **Churn by commit type** — grouped by Conventional Commit type.
+- **Highest churn** — the top paths by churn, click a bar to open the file.
+
+Charts use hand-rolled SVG and follow the VS Code theme, so light, dark and high-contrast work without extra setup. A few accent colours are available in the toolbar. Periods are grouped by the configured baseline: semver tags when present, otherwise merge commits, otherwise day/week/month buckets.
 
 ## Configuration
 
@@ -70,6 +88,7 @@ Here you can:
 - `churnlens.rangeEnd`: Custom range end date, `YYYY-MM-DD`.
 - `churnlens.commitLabels`: Comma separated Conventional Commit labels (default: the Angular convention).
 - `churnlens.hideRoot`: Hide the root project folder from the Churn Explorer (default: `true`).
+- `churnlens.baseline`: How the trend groups churn into periods. `auto` uses semver tags, then merge commits, then time buckets (default: `auto`).
 
 ### Color Customization
 
@@ -89,6 +108,7 @@ While the UI customization has been streamlined, you can still customize the 6 c
 ## Commands
 
 - `ChurnLens: Open Configuration`: Opens the configuration webview.
+- `ChurnLens: Open Trend`: Opens the trend panel with the churn charts.
 - `ChurnLens: Refresh Stats`: Manually recalculates churn statistics and updates the Churn Explorer.
 - `See git history in github`: (Context menu) Opens the file's history on GitHub.
 
