@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+@plugin 'daisyui';
+
+:root {
+  --color-primary: var(--vscode-charts-blue, var(--vscode-textLink-foreground, #3794ff));
+  --color-surface-100: var(--vscode-editor-background);
+  --color-surface-200: var(--vscode-sideBar-background, var(--vscode-editorWidget-background));
+  --color-surface-300: var(--vscode-panel-border, rgba(128, 128, 128, 0.35));
+  --color-surface-content: var(--vscode-foreground);
+  --chart-added: var(--vscode-charts-green, #89d185);
+  --chart-deleted: var(--vscode-charts-red, #f14c4c);
+  --chart-modified: var(--vscode-charts-yellow, #cca700);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size, 13px);
+  color: var(--color-surface-content);
+  background-color: var(--color-surface-100);
+}
+
+a {
+  color: var(--vscode-textLink-foreground);
+}
