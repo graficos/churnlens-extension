@@ -4,6 +4,7 @@ import { useStore } from '../composables/useStore';
 import Area from '../chart/Area.vue';
 import Bars from '../chart/Bars.vue';
 import ChartCard from './ChartCard.vue';
+import RiskPanel from './RiskPanel.vue';
 import type { RangePreset } from '../../protocol';
 
 const { state, post } = useStore();
@@ -49,6 +50,7 @@ const composition = computed(() => [
 ]);
 
 const cumulative = computed(() => state.value?.cumulative ?? []);
+const risk = computed(() => state.value?.risk ?? []);
 
 const deletionRatio = computed(() => [
   {
@@ -66,6 +68,11 @@ function onPreset(event: Event) {
 
 function onMetric(value: 'churn' | 'delta') {
   post({ type: 'setMetric', value });
+}
+
+function onRiskOpen(path: string) {
+  post({ type: 'select', path: selection.value === path ? null : path });
+  post({ type: 'openFile', path });
 }
 </script>
 
@@ -170,6 +177,7 @@ function onMetric(value: 'churn' | 'delta') {
           <p>Removed divided by added per period — rework pressure.</p>
           <Bars :labels="labels" :series="deletionRatio" :height="180" />
         </section>
+        <RiskPanel :risk="risk" :selection="selection" @open="onRiskOpen" />
         <p class="text-sm opacity-70">
           Churn is total line movement, the risk signal. Delta is net growth. Read the
           <button class="underline" @click="post({ type: 'openInfo' })">
