@@ -4,6 +4,7 @@ import { useStore } from '../composables/useStore';
 import Area from '../chart/Area.vue';
 import Bars from '../chart/Bars.vue';
 import ChartCard from './ChartCard.vue';
+import LabelPanel from './LabelPanel.vue';
 import RiskPanel from './RiskPanel.vue';
 import type { RangePreset } from '../../protocol';
 
@@ -51,6 +52,7 @@ const composition = computed(() => [
 
 const cumulative = computed(() => state.value?.cumulative ?? []);
 const risk = computed(() => state.value?.risk ?? []);
+const labelsByType = computed(() => state.value?.labels ?? []);
 
 const deletionRatio = computed(() => [
   {
@@ -177,6 +179,7 @@ function onRiskOpen(path: string) {
           <p>Removed divided by added per period — rework pressure.</p>
           <Bars :labels="labels" :series="deletionRatio" :height="180" />
         </section>
+        <LabelPanel v-if="labelsByType.length" :labels="labelsByType" />
         <RiskPanel :risk="risk" :selection="selection" @open="onRiskOpen" />
         <p class="text-sm opacity-70">
           Churn is total line movement, the risk signal. Delta is net growth. Read the
