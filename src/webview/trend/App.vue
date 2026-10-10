@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useStore } from '../composables/useStore';
+import { useTheme } from '../composables/useTheme';
 import Area from '../chart/Area.vue';
 import Bars from '../chart/Bars.vue';
 import ChartCard from './ChartCard.vue';
@@ -9,6 +10,7 @@ import RiskPanel from './RiskPanel.vue';
 import type { Baseline, RangePreset } from '../../protocol';
 
 const { state, post } = useStore();
+const { accent, accents } = useTheme();
 
 const presets: { value: RangePreset; label: string }[] = [
   { value: '2d', label: '2 days' },
@@ -128,6 +130,9 @@ function onRiskOpen(path: string) {
         <option v-for="option in baselines" :key="option.value" :value="option.value">
           {{ option.label }}
         </option>
+      </select>
+      <select v-model="accent" title="Accent">
+        <option v-for="option in accents" :key="option" :value="option">{{ option }}</option>
       </select>
       <span class="flex-1"></span>
       <span class="info" @click="post({ type: 'openInfo' })">
