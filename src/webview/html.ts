@@ -33,27 +33,41 @@ export function webviewHtml(
   extensionUri: vscode.Uri,
   entry: string,
   body: string,
+  options: { codicons?: boolean } = {},
 ): string {
   const root = vscode.Uri.joinPath(extensionUri, 'dist', 'webview');
   const chunk = readManifest(extensionUri)[entry];
   const nonce = getNonce();
 
   const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(root, chunk.file)).toString();
-  const styles = (chunk.css ?? [])
-    .map(
-      (css) =>
-        `<link rel="stylesheet" href="${webview
-          .asWebviewUri(vscode.Uri.joinPath(root, css))
-          .toString()}" />`,
-    )
-    .join('\n    ');
+  const links = (chunk.css ?? []).map((css) =>
+    webview.asWebviewUri(vscode.Uri.joinPath(root, css)).toString(),
+  );
+
+  if (options.codicons) {
+    links.push(
+      webview
+        .asWebviewUri(
+          vscode.Uri.joinPath(
+            extensionUri,
+            'node_modules',
+            '@vscode/codicons',
+            'dist',
+            'codicon.css',
+          ),
+        )
+        .toString(),
+    );
+  }
+
+  const styles = links.map((href) => `<link rel="stylesheet" href="${href}" />`).join('\n    ');
 
   const csp = [
     `default-src 'none'`,
     `img-src ${webview.cspSource} data:`,
     `style-src ${webview.cspSource}`,
     `font-src ${webview.cspSource}`,
-    `script-src 'nonce-${nonce}'`,
+    `script-src ${webview.cspSource} 'nonce-${nonce}'`,
   ].join('; ');
 
   return `<!DOCTYPE html>

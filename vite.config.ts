@@ -14,6 +14,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         config: fileURLToPath(new URL('./src/webview/config/main.ts', import.meta.url)),
+        sidebar: fileURLToPath(new URL('./src/webview/sidebar/main.ts', import.meta.url)),
       },
     },
   },

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { GitService } from './git';
 import { ChurnSidebarProvider } from './sidebar/ChurnSidebarProvider';
+import { ChurnStore } from './store';
 import { ConfigPanel } from './webview/ConfigPanel';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -24,9 +25,10 @@ function activateInternal(context: vscode.ExtensionContext) {
 
   const rootPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
   const gitService = new GitService(rootPath);
+  const store = new ChurnStore(gitService, rootPath);
 
   // Register Sidebar
-  const sidebarProvider = new ChurnSidebarProvider(context.extensionUri, gitService);
+  const sidebarProvider = new ChurnSidebarProvider(context.extensionUri, store);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(ChurnSidebarProvider.viewType, sidebarProvider),
   );
@@ -36,8 +38,7 @@ function activateInternal(context: vscode.ExtensionContext) {
   });
 
   let refreshDisposable = vscode.commands.registerCommand('churnlens.refresh', () => {
-    // Refresh sidebar
-    void sidebarProvider.refresh();
+    void store.refresh();
     vscode.window.showInformationMessage('ChurnLens: Refreshed churn stats.');
   });
 
@@ -92,7 +93,7 @@ function activateInternal(context: vscode.ExtensionContext) {
     if (refreshTimer) {
       clearTimeout(refreshTimer);
     }
-    refreshTimer = setTimeout(() => void sidebarProvider.refresh(), 150);
+    refreshTimer = setTimeout(() => void store.refresh(), 150);
   };
 
   context.subscriptions.push(
