@@ -1,48 +1,79 @@
 import * as path from 'path';
+import { FileChurn } from './parse';
+import { isWithin } from './paths';
+
+export interface ChurnAggregate {
+  added: number;
+  deleted: number;
+  churn: number;
+  delta: number;
+  commits: number;
+}
+
+export type Metric = 'churn' | 'delta';
 
 export class ChurnCalculator {
-  // We now return the itemCounts map directly alongside levels so the provider can show specific counts
-  static calculate(
-    fileCounts: Map<string, number>,
+  static aggregate(
+    files: Map<string, FileChurn>,
     rootPath: string
-  ): { levels: Map<string, number>; counts: Map<string, number> } {
-    const levels = new Map<string, number>();
-    const itemCounts = new Map<string, number>(fileCounts);
+  ): Map<string, ChurnAggregate> {
+    const items = new Map<string, ChurnAggregate>();
 
-    // Aggregate counts for folders
-    for (const [filePath, count] of fileCounts.entries()) {
-      let currentDir = path.dirname(filePath);
+    const getOrCreate = (key: string): ChurnAggregate => {
+      let entry = items.get(key);
+      if (!entry) {
+        entry = { added: 0, deleted: 0, churn: 0, delta: 0, commits: 0 };
+        items.set(key, entry);
+      }
+      return entry;
+    };
 
-      // Go up until we reach the root
-      while (currentDir.startsWith(rootPath)) {
-        itemCounts.set(currentDir, (itemCounts.get(currentDir) || 0) + count);
+    const addInto = (target: ChurnAggregate, source: FileChurn) => {
+      target.added += source.added;
+      target.deleted += source.deleted;
+      target.churn += source.churn;
+      target.delta += source.delta;
+      target.commits += source.commits;
+    };
 
-        if (currentDir === rootPath) break;
+    for (const [filePath, file] of files) {
+      addInto(getOrCreate(filePath), file);
 
-        const parent = path.dirname(currentDir);
-        if (parent === currentDir) break;
-        currentDir = parent;
+      let dir = path.dirname(filePath);
+      while (isWithin(rootPath, dir)) {
+        addInto(getOrCreate(dir), file);
+        if (dir === rootPath) {
+          break;
+        }
+        const parent = path.dirname(dir);
+        if (parent === dir) {
+          break;
+        }
+        dir = parent;
       }
     }
 
+    return items;
+  }
+
+  static levels(items: Map<string, ChurnAggregate>): Map<string, number> {
     let max = 0;
-    for (const count of itemCounts.values()) {
-      if (count > max) max = count;
+    for (const item of items.values()) {
+      if (item.churn > max) {
+        max = item.churn;
+      }
     }
 
+    const levels = new Map<string, number>();
     if (max === 0) {
-      return { levels, counts: itemCounts };
+      return levels;
     }
 
-    for (const [item, count] of itemCounts.entries()) {
-      // Simple linear normalization
-      const normalized = count / max;
-      // Map to 1-6 levels
-      // If count is 0 (shouldn't be in map if from git log), level is 0
-      const level = Math.ceil(normalized * 6);
-      levels.set(item, level);
+    for (const [key, item] of items) {
+      const normalized = item.churn / max;
+      levels.set(key, Math.min(6, Math.max(1, Math.ceil(normalized * 6))));
     }
 
-    return { levels, counts: itemCounts };
+    return levels;
   }
 }
