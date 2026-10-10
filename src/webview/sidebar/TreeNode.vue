@@ -61,15 +61,17 @@ function onRow() {
       <span class="codicon" :class="iconClass"></span>
       <span class="name">{{ node.name }}</span>
       <span class="count">{{ value }}</span>
-      <button
-        v-if="!node.isDir"
-        class="open-file"
-        title="Open file in the editor"
-        aria-label="Open file in the editor"
-        @click.stop="actions.openFile(node.path)"
-      >
-        <span class="codicon codicon-go-to-file"></span>
-      </button>
+      <span class="row-end">
+        <button
+          v-if="!node.isDir"
+          class="open-file"
+          title="Open file in the editor"
+          aria-label="Open file in the editor"
+          @click.stop="actions.openFile(node.path)"
+        >
+          <span class="codicon codicon-go-to-file"></span>
+        </button>
+      </span>
     </div>
 
     <ul v-if="node.isDir && open" class="tree-list">
