@@ -1,14 +1,14 @@
 import { ref, watch } from 'vue';
 import { vscode } from './vscode';
 
-export const ACCENTS = ['default', 'blue', 'green', 'purple', 'amber'] as const;
+export const ACCENTS = ['amber', 'blue', 'purple', 'teal'] as const;
 export type Accent = (typeof ACCENTS)[number];
 
 interface WebviewState {
   accent?: Accent;
 }
 
-const initial = (vscode.getState() as WebviewState | undefined)?.accent ?? 'default';
+const initial = (vscode.getState() as WebviewState | undefined)?.accent ?? 'amber';
 
 export function useTheme() {
   const accent = ref<Accent>(initial);

@@ -2,54 +2,103 @@
 @plugin 'daisyui';
 
 :root {
-  --color-primary: var(--vscode-charts-blue, var(--vscode-textLink-foreground, #3794ff));
-  --color-surface-100: var(--vscode-editor-background);
-  --color-surface-200: var(--vscode-sideBar-background, var(--vscode-editorWidget-background));
-  --color-surface-300: var(--vscode-panel-border, rgba(128, 128, 128, 0.35));
-  --color-surface-content: var(--vscode-foreground);
-  --chart-added: var(--vscode-charts-green, #89d185);
-  --chart-deleted: var(--vscode-charts-red, #f14c4c);
-  --chart-modified: var(--vscode-charts-yellow, #cca700);
+  color-scheme: light dark;
+
+  --surface: var(--vscode-editor-background);
+  --surface-2: var(--vscode-sideBar-background, var(--vscode-editorWidget-background));
+  --surface-raise: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  --border: var(--vscode-panel-border, rgba(128, 128, 128, 0.24));
+  --border-strong: var(
+    --vscode-widget-border,
+    var(--vscode-panel-border, rgba(128, 128, 128, 0.4))
+  );
+  --ink: var(--vscode-foreground);
+  --ink-muted: color-mix(in srgb, var(--vscode-foreground) 64%, transparent);
+  --ink-faint: color-mix(in srgb, var(--vscode-foreground) 40%, transparent);
+  --focus: var(--vscode-focusBorder, #007fd4);
+
+  --added: var(--vscode-charts-green, #3fb950);
+  --removed: var(--vscode-charts-red, #f85149);
+  --churn: var(--vscode-charts-orange, #d29922);
+  --delta: var(--vscode-charts-blue, #58a6ff);
+
+  --mono: var(--vscode-editor-font-family, ui-monospace, SFMono-Regular, Menlo, monospace);
+
+  /* aliases kept for older selectors */
+  --color-primary: var(--vscode-textLink-foreground, #3794ff);
+  --color-surface-100: var(--surface);
+  --color-surface-200: var(--surface-2);
+  --color-surface-300: var(--border);
+  --color-surface-content: var(--ink);
+
+  /* DaisyUI 5 theme tokens, aligned to the VS Code theme so components
+     (skeleton, buttons, inputs) match light/dark/high-contrast. */
+  --color-base-100: var(--surface);
+  --color-base-200: color-mix(in srgb, var(--ink) 8%, var(--surface));
+  --color-base-300: color-mix(in srgb, var(--ink) 14%, var(--surface));
+  --color-base-content: var(--ink);
+  --color-primary-content: var(--surface);
 }
 
+/* The signature churn hue. Amber is the default; the switcher picks another. */
 :root[data-accent='blue'] {
-  --color-primary: var(--vscode-charts-blue, #3794ff);
-}
-:root[data-accent='green'] {
-  --color-primary: var(--vscode-charts-green, #89d185);
+  --churn: var(--vscode-charts-blue, #58a6ff);
 }
 :root[data-accent='purple'] {
-  --color-primary: var(--vscode-charts-purple, #b180d7);
+  --churn: var(--vscode-charts-purple, #bc8cff);
 }
-:root[data-accent='amber'] {
-  --color-primary: var(--vscode-charts-orange, #d18616);
+:root[data-accent='teal'] {
+  --churn: #39c5cf;
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
   margin: 0;
-  padding: 0;
+  min-height: 100vh;
   font-family: var(--vscode-font-family);
   font-size: var(--vscode-font-size, 13px);
-  color: var(--color-surface-content);
-  background-color: var(--color-surface-100);
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+#app {
+  min-height: 100vh;
 }
 
 a {
-  color: var(--vscode-textLink-foreground);
+  color: var(--color-primary);
 }
 
+:focus-visible {
+  outline: 1px solid var(--focus);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+
+.figure {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* ---- charts ---- */
 .chart-grid {
-  stroke: var(--color-surface-content);
+  stroke: var(--ink);
   opacity: 0.1;
 }
 
 .chart-axis {
-  stroke: var(--color-surface-content);
+  stroke: var(--ink);
   opacity: 0.25;
 }
 
 .chart-tick {
-  fill: var(--color-surface-content);
+  fill: var(--ink);
   opacity: 0.55;
   font-size: 10px;
 }
@@ -58,7 +107,6 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 8px;
 }
 
 .legend-item {
@@ -84,4 +132,11 @@ a {
   height: 10px;
   border-radius: 2px;
   display: inline-block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

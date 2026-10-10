@@ -1,98 +1,282 @@
 @import '../app.css';
 
 .trend {
-  max-width: 960px;
+  max-width: 1180px;
+  min-height: 100vh;
   margin: 0 auto;
-  padding: 20px;
+  padding: 22px 20px 40px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
-.toolbar {
+/* ---- header ---- */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 28px;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.head-title h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.head-title p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.head-title .figure {
+  color: var(--churn);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 132px;
+}
+
+.field-label {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--ink-muted);
 }
 
-.toolbar select {
+.field select {
   background: var(--vscode-dropdown-background, var(--vscode-input-background));
   color: var(--vscode-dropdown-foreground, var(--vscode-input-foreground));
-  border: 1px solid var(--vscode-dropdown-border, var(--vscode-input-border, transparent));
+  border: 1px solid var(--vscode-dropdown-border, var(--vscode-input-border, var(--border)));
   padding: 3px 6px;
   font: inherit;
 }
 
-.info {
+.field select:focus {
+  border-color: var(--focus);
+}
+
+.field-hint {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ink-faint);
+  max-width: 26ch;
+}
+
+.i {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  border: none;
+  background: none;
+  padding: 0;
   cursor: pointer;
-  color: var(--vscode-textLink-foreground);
-  border-bottom: 1px solid transparent;
+  color: var(--color-primary);
+  font-size: 12px;
 }
 
-.info:hover {
-  border-bottom-color: currentColor;
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  overflow: hidden;
+  width: fit-content;
 }
 
-.totals {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 12px;
+.segmented button {
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  padding: 3px 12px;
+  cursor: pointer;
 }
 
-.tile {
-  border: 1px solid var(--color-surface-300);
-  border-radius: 8px;
-  padding: 10px 12px;
-  background: var(--color-surface-200);
+.segmented button + button {
+  border-left: 1px solid var(--border-strong);
 }
 
-.tile .label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  opacity: 0.7;
-}
-
-.tile .value {
-  font-size: 1.4rem;
+.segmented button.on {
+  background: color-mix(in srgb, var(--churn) 22%, transparent);
+  color: var(--ink);
   font-weight: 600;
 }
 
-.card {
-  border: 1px solid var(--color-surface-300);
+/* ---- filter banner ---- */
+.filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
   border-radius: 8px;
+  border-left: 3px solid var(--churn);
+  background: color-mix(in srgb, var(--churn) 13%, transparent);
+}
+
+.filter .filter-label {
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+.filter .filter-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.filter .filter-clear {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.filter .filter-clear:hover {
+  border-color: var(--churn);
+}
+
+/* ---- ledger statement ---- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 10px;
+}
+
+.stat {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.stat-label {
+  display: block;
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+.stat-value {
+  display: block;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.stat.added .stat-value {
+  color: var(--added);
+}
+.stat.removed .stat-value {
+  color: var(--removed);
+}
+.stat.churn .stat-value {
+  color: var(--churn);
+}
+.stat.delta.grow .stat-value {
+  color: var(--added);
+}
+.stat.delta.shrink .stat-value {
+  color: var(--removed);
+}
+
+.stats-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.stats-note .figure {
+  color: var(--ink);
+}
+
+/* ---- dashboard grid ---- */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
   padding: 14px 16px;
-  background: var(--color-surface-100);
+  min-width: 0;
+}
+
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .card h2 {
-  margin: 0 0 4px;
-  font-size: 0.95rem;
+  margin: 0;
+  font-size: 14px;
   font-weight: 600;
 }
 
 .card p {
-  margin: 0 0 10px;
-  opacity: 0.7;
-  font-size: 0.85rem;
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: var(--ink-muted);
 }
 
-.bar-list {
+.card .chart-wrap {
+  margin-top: 12px;
+}
+
+.card .legend {
+  margin-top: 10px;
+}
+
+/* ---- ranking (it is a sequence, so numbers earn their place) ---- */
+.rank {
   list-style: none;
-  margin: 0;
+  margin: 12px 0 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
-.bar-row {
+.rank-row {
   display: grid;
-  grid-template-columns: minmax(120px, 220px) 1fr 56px;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   width: 100%;
@@ -101,47 +285,131 @@
   color: inherit;
   font: inherit;
   text-align: left;
-  padding: 3px 6px;
-  border-radius: 4px;
-}
-
-button.bar-row {
+  padding: 4px 6px;
+  border-radius: 6px;
   cursor: pointer;
 }
 
-button.bar-row:hover {
+.rank-row:hover {
   background: var(--vscode-list-hoverBackground);
 }
 
-.bar-row.selected {
+.rank-row.selected {
   background: var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.2));
+}
+
+.rank-num {
+  color: var(--ink-faint);
+  font-size: 13px;
+}
+
+.rank-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.rank-name {
+  font-size: 13px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rank-track {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+  overflow: hidden;
+}
+
+.rank-fill {
+  display: block;
+  height: 100%;
+  background: var(--churn);
+  border-radius: 3px;
+}
+
+.rank-value {
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+/* ---- generic horizontal bars (commit types) ---- */
+.bar-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 130px) 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 0;
 }
 
 .bar-name {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-size: 0.85rem;
+  font-size: 12px;
 }
 
 .bar-track {
   display: block;
-  height: 10px;
-  background: color-mix(in srgb, var(--color-surface-content) 8%, transparent);
-  border-radius: 5px;
+  height: 8px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
   overflow: hidden;
 }
 
 .bar-fill {
   display: block;
   height: 100%;
-  background: var(--vscode-charts-red, #f14c4c);
-  border-radius: 5px;
+  border-radius: 4px;
+  background: var(--ink-faint);
 }
 
 .bar-value {
   text-align: right;
+  font-family: var(--mono);
   font-variant-numeric: tabular-nums;
-  opacity: 0.8;
-  font-size: 0.85rem;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+/* ---- skeleton ---- */
+.sk-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.sk-line {
+  height: 12px;
+  border-radius: 3px;
+}
+
+.sk-chart {
+  height: 200px;
+  border-radius: 6px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+@media (max-width: 760px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }

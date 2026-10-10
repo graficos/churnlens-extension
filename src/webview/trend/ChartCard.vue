@@ -26,13 +26,15 @@ function toggle(index: number) {
   <section class="card">
     <h2>{{ title }}</h2>
     <p v-if="caption">{{ caption }}</p>
-    <Bars
-      :labels="labels"
-      :series="series"
-      :stacked="stacked"
-      :highlight="highlight"
-      :hidden="hidden"
-    />
-    <Legend :items="series" :hidden="hidden" @hover="highlight = $event" @toggle="toggle" />
+    <div class="chart-wrap">
+      <Bars
+        :labels="labels"
+        :series="series"
+        :stacked="stacked"
+        :highlight="highlight"
+        :hidden="hidden"
+      />
+      <Legend :items="series" :hidden="hidden" @hover="highlight = $event" @toggle="toggle" />
+    </div>
   </section>
 </template>

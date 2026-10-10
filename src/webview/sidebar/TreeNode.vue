@@ -8,9 +8,11 @@ const props = defineProps<{
   selection: string | null;
 }>();
 
-const actions = inject<{ select: (path: string) => void; open: (path: string) => void }>(
-  'actions',
-)!;
+const actions = inject<{
+  filter: (path: string) => void;
+  openTrend: (path: string) => void;
+  openFile: (path: string) => void;
+}>('actions')!;
 const open = ref(false);
 
 const selected = computed(() => props.selection === props.node.path);
@@ -36,42 +38,38 @@ const iconClass = computed(() => {
   return 'codicon-file';
 });
 
-function onDirectory() {
-  open.value = !open.value;
-  actions.select(props.node.path);
-}
-
-function onFile() {
-  actions.select(props.node.path);
-  actions.open(props.node.path);
+function onRow() {
+  if (props.node.isDir) {
+    open.value = !open.value;
+    actions.filter(props.node.path);
+  } else {
+    actions.openTrend(props.node.path);
+  }
 }
 </script>
 
 <template>
   <li>
     <div
-      v-if="node.isDir"
       class="node"
       :class="['level-' + node.level, { selected }]"
       :data-vscode-context="context"
-      @click="onDirectory"
+      :title="node.path"
+      @click="onRow"
     >
-      <span class="arrow" :class="{ open }">&#9654;</span>
-      <span class="codicon codicon-folder"></span>
-      <span class="name">{{ node.name }}</span>
-      <span class="count">{{ value }}</span>
-    </div>
-    <div
-      v-else
-      class="node"
-      :class="['level-' + node.level, { selected }]"
-      :data-vscode-context="context"
-      @click="onFile"
-    >
-      <span class="arrow empty"></span>
+      <span class="arrow" :class="node.isDir ? { open } : 'empty'">&#9654;</span>
       <span class="codicon" :class="iconClass"></span>
       <span class="name">{{ node.name }}</span>
       <span class="count">{{ value }}</span>
+      <button
+        v-if="!node.isDir"
+        class="open-file"
+        title="Open file in the editor"
+        aria-label="Open file in the editor"
+        @click.stop="actions.openFile(node.path)"
+      >
+        <span class="codicon codicon-go-to-file"></span>
+      </button>
     </div>
 
     <ul v-if="node.isDir && open" class="tree-list">
