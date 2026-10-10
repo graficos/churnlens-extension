@@ -15,6 +15,7 @@ export default defineConfig({
       input: {
         config: fileURLToPath(new URL('./src/webview/config/main.ts', import.meta.url)),
         sidebar: fileURLToPath(new URL('./src/webview/sidebar/main.ts', import.meta.url)),
+        trend: fileURLToPath(new URL('./src/webview/trend/main.ts', import.meta.url)),
       },
     },
   },

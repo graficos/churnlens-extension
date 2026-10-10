@@ -85,6 +85,9 @@ function onMetric(event: Event) {
         </span>
         <span class="flex-1"></span>
         <span class="actions">
+          <button title="Open Trend" @click="post({ type: 'openTrend' })">
+            <span class="codicon codicon-graph-line"></span>
+          </button>
           <button title="Refresh" @click="post({ type: 'refresh' })">
             <span class="codicon codicon-refresh"></span>
           </button>

@@ -36,6 +36,7 @@ export type WebToExt =
   | { type: 'select'; path: string | null }
   | { type: 'openFile'; path: string }
   | { type: 'openInfo' }
-  | { type: 'openSettings' };
+  | { type: 'openSettings' }
+  | { type: 'openTrend' };
 
 export type ExtToWeb = { type: 'state'; state: ViewState };

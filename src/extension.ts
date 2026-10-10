@@ -4,6 +4,7 @@ import { GitService } from './git';
 import { ChurnSidebarProvider } from './sidebar/ChurnSidebarProvider';
 import { ChurnStore } from './store';
 import { ConfigPanel } from './webview/ConfigPanel';
+import { TrendPanel } from './webview/TrendPanel';
 
 export function activate(context: vscode.ExtensionContext) {
   try {
@@ -40,6 +41,10 @@ function activateInternal(context: vscode.ExtensionContext) {
   let refreshDisposable = vscode.commands.registerCommand('churnlens.refresh', () => {
     void store.refresh();
     vscode.window.showInformationMessage('ChurnLens: Refreshed churn stats.');
+  });
+
+  let openTrendDisposable = vscode.commands.registerCommand('churnlens.openTrend', () => {
+    TrendPanel.createOrShow(context.extensionUri, store);
   });
 
   let openInGithubDisposable = vscode.commands.registerCommand(
@@ -85,6 +90,7 @@ function activateInternal(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(disposable);
   context.subscriptions.push(refreshDisposable);
+  context.subscriptions.push(openTrendDisposable);
   context.subscriptions.push(openInGithubDisposable);
 
   // Listen for configuration changes (debounced: one refresh per burst)

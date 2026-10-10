@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { ExtToWeb, RangePreset, ViewState, WebToExt } from '../protocol';
+import { handleWebMessage } from '../messages';
+import { ExtToWeb, ViewState, WebToExt } from '../protocol';
 import { ChurnStore } from '../store';
 import { webviewHtml } from '../webview/html';
 
@@ -41,7 +42,14 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
       visible = webviewView.visible;
       this.store.setVisible(visible);
     });
-    webviewView.webview.onDidReceiveMessage((message: WebToExt) => void this.handle(message));
+    webviewView.webview.onDidReceiveMessage(
+      (message: WebToExt) =>
+        void handleWebMessage(
+          { store: this.store, extensionUri: this._extensionUri },
+          message,
+          (state) => this.post(state),
+        ),
+    );
 
     visible = webviewView.visible;
     this.store.setVisible(visible);
@@ -50,47 +58,5 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
   private post(state: ViewState) {
     const message: ExtToWeb = { type: 'state', state };
     void this._view?.webview.postMessage(message);
-  }
-
-  private async handle(message: WebToExt) {
-    switch (message.type) {
-      case 'ready':
-        this.post(this.store.current);
-        break;
-      case 'refresh':
-        await this.store.refresh();
-        break;
-      case 'setRange':
-        await this.setRange(message.preset, message.start, message.end);
-        break;
-      case 'setMetric':
-        this.store.setMetric(message.value);
-        break;
-      case 'select':
-        this.store.setSelection(message.path);
-        break;
-      case 'openFile':
-        await vscode.window.showTextDocument(vscode.Uri.file(message.path));
-        break;
-      case 'openInfo':
-        await vscode.window.showTextDocument(
-          vscode.Uri.joinPath(this._extensionUri, 'docs', 'churn-and-delta.md'),
-          { preview: true },
-        );
-        break;
-      case 'openSettings':
-        await vscode.commands.executeCommand('churnlens.openConfig');
-        break;
-    }
-  }
-
-  private async setRange(preset: RangePreset, start?: string, end?: string) {
-    const config = vscode.workspace.getConfiguration('churnlens');
-    const target = vscode.ConfigurationTarget.Global;
-    if (preset === 'custom') {
-      if (start !== undefined) await config.update('rangeStart', start, target);
-      if (end !== undefined) await config.update('rangeEnd', end, target);
-    }
-    await config.update('rangePreset', preset, target);
   }
 }

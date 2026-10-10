@@ -1,0 +1,82 @@
+@import '../app.css';
+
+.trend {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.toolbar select {
+  background: var(--vscode-dropdown-background, var(--vscode-input-background));
+  color: var(--vscode-dropdown-foreground, var(--vscode-input-foreground));
+  border: 1px solid var(--vscode-dropdown-border, var(--vscode-input-border, transparent));
+  padding: 3px 6px;
+  font: inherit;
+}
+
+.info {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  color: var(--vscode-textLink-foreground);
+  border-bottom: 1px solid transparent;
+}
+
+.info:hover {
+  border-bottom-color: currentColor;
+}
+
+.totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.tile {
+  border: 1px solid var(--color-surface-300);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--color-surface-200);
+}
+
+.tile .label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+.tile .value {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.card {
+  border: 1px solid var(--color-surface-300);
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: var(--color-surface-100);
+}
+
+.card h2 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.card p {
+  margin: 0 0 10px;
+  opacity: 0.7;
+  font-size: 0.85rem;
+}
