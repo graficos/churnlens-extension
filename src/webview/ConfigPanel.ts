@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { ConfigManager, RangePreset } from '../config';
+import { webviewHtml } from './html';
 
 interface ConfigPayload {
   preset: RangePreset;
@@ -29,7 +30,7 @@ export class ConfigPanel {
       'churnlensConfig',
       'ChurnLens Configuration',
       column || vscode.ViewColumn.One,
-      { enableScripts: true }
+      { enableScripts: true, localResourceRoots: [extensionUri] },
     );
 
     ConfigPanel.currentPanel = new ConfigPanel(panel, extensionUri);
@@ -50,7 +51,7 @@ export class ConfigPanel {
         }
       },
       null,
-      this._disposables
+      this._disposables,
     );
   }
 
@@ -72,103 +73,22 @@ export class ConfigPanel {
     }
   }
 
-  private _getHtmlForWebview() {
+  private _getHtmlForWebview(): string {
     const config = vscode.workspace.getConfiguration('churnlens');
-    const preset = config.get<string>('rangePreset', '30d');
-    const start = config.get<string>('rangeStart', '');
-    const end = config.get<string>('rangeEnd', '');
-    const hideRoot = config.get<boolean>('hideRoot', true);
-    const commitLabels = ConfigManager.getCommitLabels().join(', ');
+    const payload: ConfigPayload = {
+      preset: config.get<RangePreset>('rangePreset', '30d'),
+      start: config.get<string>('rangeStart', ''),
+      end: config.get<string>('rangeEnd', ''),
+      hideRoot: config.get<boolean>('hideRoot', true),
+      commitLabels: ConfigManager.getCommitLabels().join(', '),
+    };
 
-    return String.raw`<!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta charset="UTF-8" />
-          <title>ChurnLens Configuration</title>
-          <style>
-            body {
-              font-family: var(--vscode-font-family);
-              padding: 20px;
-              color: var(--vscode-editor-foreground);
-              background-color: var(--vscode-editor-background);
-              max-width: 640px;
-            }
-            .setting { margin-bottom: 20px; }
-            label { display: block; margin-bottom: 5px; }
-            input, select {
-              padding: 5px;
-              background: var(--vscode-input-background);
-              color: var(--vscode-input-foreground);
-              border: 1px solid var(--vscode-input-border);
-              font-family: inherit;
-            }
-            input[type='text'] { width: 100%; box-sizing: border-box; }
-            button {
-              padding: 8px 16px;
-              background: var(--vscode-button-background);
-              color: var(--vscode-button-foreground);
-              border: none;
-              cursor: pointer;
-            }
-            button:hover { background: var(--vscode-button-hoverBackground); }
-            .hint { opacity: 0.7; font-size: 0.85em; margin-top: 4px; }
-          </style>
-        </head>
-        <body>
-          <h1>ChurnLens Configuration</h1>
+    const json = JSON.stringify(payload)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;');
+    const body = `<div id="app" data-config="${json}"></div>`;
 
-          <div class="setting">
-            <label for="preset">Range preset</label>
-            <select id="preset">
-              <option value="2d">2 days</option>
-              <option value="3d">3 days</option>
-              <option value="7d">7 days</option>
-              <option value="30d">30 days</option>
-              <option value="custom">Custom</option>
-            </select>
-          </div>
-
-          <div class="setting">
-            <label for="start">Custom range (used when preset is "Custom")</label>
-            <input type="date" id="start" value="${start}" />
-            <input type="date" id="end" value="${end}" />
-          </div>
-
-          <div class="setting">
-            <label for="hideRoot">
-              <input type="checkbox" id="hideRoot" ${hideRoot ? 'checked' : ''} />
-              Hide the root project folder
-            </label>
-          </div>
-
-          <div class="setting">
-            <label for="commitLabels">Commit labels (comma separated)</label>
-            <input type="text" id="commitLabels" value="${commitLabels}" />
-            <div class="hint">
-              Used to group churn by Conventional Commit type. Default follows the
-              Angular convention.
-            </div>
-          </div>
-
-          <button onclick="save()">Save</button>
-
-          <script>
-            const vscode = acquireVsCodeApi();
-            document.getElementById('preset').value = '${preset}';
-            function save() {
-              vscode.postMessage({
-                command: 'save',
-                value: {
-                  preset: document.getElementById('preset').value,
-                  start: document.getElementById('start').value,
-                  end: document.getElementById('end').value,
-                  hideRoot: document.getElementById('hideRoot').checked,
-                  commitLabels: document.getElementById('commitLabels').value,
-                },
-              });
-            }
-          </script>
-        </body>
-      </html>`;
+    return webviewHtml(this._panel.webview, this._extensionUri, 'src/webview/config/main.ts', body);
   }
 }
