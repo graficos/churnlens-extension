@@ -20,7 +20,15 @@ const presets: { value: RangePreset; label: string }[] = [
   { value: 'custom', label: 'Custom' },
 ];
 
+const baselines: { value: Baseline; label: string }[] = [
+  { value: 'auto', label: 'Auto' },
+  { value: 'tags', label: 'Git tags' },
+  { value: 'merges', label: 'Merge commits' },
+  { value: 'time', label: 'Calendar' },
+];
+
 const preset = computed(() => state.value?.preset ?? '30d');
+const baseline = computed(() => state.value?.baseline ?? 'auto');
 const metric = computed(() => state.value?.metric ?? 'churn');
 const totals = computed(() => state.value?.totals);
 const series = computed(() => state.value?.series ?? []);
@@ -30,26 +38,23 @@ const loading = computed(
 );
 const error = computed(() => state.value?.status === 'error');
 
-const granularityLabel = computed(() => {
-  const points = series.value;
-  if (points.length === 0) return '';
-  return points.length > 1 ? `${points.length} periods` : '1 period';
-});
+const presetLabel = computed(
+  () => presets.find((p) => p.value === preset.value)?.label ?? '30 days',
+);
+const baselineLabel = computed(
+  () => baselines.find((b) => b.value === baseline.value)?.label ?? 'auto',
+);
 
 const labels = computed(() => series.value.map((point) => point.label));
 
 const deltaVsChurn = computed(() => [
-  { name: 'Churn', color: 'var(--color-primary)', values: series.value.map((p) => p.churn) },
-  {
-    name: 'Delta',
-    color: 'var(--vscode-charts-purple, #b180d7)',
-    values: series.value.map((p) => p.delta),
-  },
+  { name: 'Churn', color: 'var(--churn)', values: series.value.map((p) => p.churn) },
+  { name: 'Delta', color: 'var(--delta)', values: series.value.map((p) => p.delta) },
 ]);
 
 const composition = computed(() => [
-  { name: 'Added', color: 'var(--chart-added)', values: series.value.map((p) => p.added) },
-  { name: 'Removed', color: 'var(--chart-deleted)', values: series.value.map((p) => p.deleted) },
+  { name: 'Added', color: 'var(--added)', values: series.value.map((p) => p.added) },
+  { name: 'Removed', color: 'var(--removed)', values: series.value.map((p) => p.deleted) },
 ]);
 
 const cumulative = computed(() => state.value?.cumulative ?? []);
@@ -59,32 +64,26 @@ const labelsByType = computed(() => state.value?.labels ?? []);
 const deletionRatio = computed(() => [
   {
     name: 'Deletion ratio',
-    color: 'var(--chart-deleted)',
+    color: 'var(--removed)',
     values: series.value.map((p) =>
       p.added === 0 ? (p.deleted === 0 ? 0 : 1) : p.deleted / p.added,
     ),
   },
 ]);
 
+const num = (value: number) => value.toLocaleString();
+const signed = (value: number) => `${value > 0 ? '+' : ''}${value.toLocaleString()}`;
+
 function onPreset(event: Event) {
   post({ type: 'setRange', preset: (event.target as HTMLSelectElement).value as RangePreset });
 }
 
-function onMetric(value: 'churn' | 'delta') {
-  post({ type: 'setMetric', value });
-}
-
-const baselines = [
-  { value: 'auto', label: 'Auto' },
-  { value: 'tags', label: 'Tags' },
-  { value: 'merges', label: 'Merges' },
-  { value: 'time', label: 'Time' },
-] as const;
-
-const baseline = computed(() => state.value?.baseline ?? 'auto');
-
 function onBaseline(event: Event) {
   post({ type: 'setBaseline', value: (event.target as HTMLSelectElement).value as Baseline });
+}
+
+function onMetric(value: 'churn' | 'delta') {
+  post({ type: 'setMetric', value });
 }
 
 function onRiskOpen(path: string) {
@@ -95,122 +94,195 @@ function onRiskOpen(path: string) {
 
 <template>
   <main class="trend">
-    <header class="toolbar">
-      <h1 class="text-lg font-semibold">Churn Trend</h1>
-      <select :value="preset" @change="onPreset">
-        <option v-for="option in presets" :key="option.value" :value="option.value">
-          {{ option.label }}
-        </option>
-      </select>
-      <div class="flex items-center gap-1 text-sm">
-        <button
-          class="rounded px-2 py-1"
-          :class="
-            metric === 'churn'
-              ? 'bg-[var(--vscode-button-background)] text-[var(--vscode-button-foreground)]'
-              : ''
-          "
-          @click="onMetric('churn')"
-        >
-          Churn
-        </button>
-        <button
-          class="rounded px-2 py-1"
-          :class="
-            metric === 'delta'
-              ? 'bg-[var(--vscode-button-background)] text-[var(--vscode-button-foreground)]'
-              : ''
-          "
-          @click="onMetric('delta')"
-        >
-          Delta
-        </button>
-      </div>
-      <select :value="baseline" title="Baseline" @change="onBaseline">
-        <option v-for="option in baselines" :key="option.value" :value="option.value">
-          {{ option.label }}
-        </option>
-      </select>
-      <select v-model="accent" title="Accent">
-        <option v-for="option in accents" :key="option" :value="option">{{ option }}</option>
-      </select>
-      <span class="flex-1"></span>
-      <span class="info" @click="post({ type: 'openInfo' })">
-        <span class="codicon codicon-info"></span>info
-      </span>
-      <button title="Refresh" @click="post({ type: 'refresh' })">
-        <span class="codicon codicon-refresh"></span>
-      </button>
-    </header>
-
-    <p v-if="selection" class="text-sm opacity-70">
-      Filtered to <span class="font-medium">{{ selection }}</span>
-      <button class="ml-2 underline" @click="post({ type: 'select', path: null })">clear</button>
-    </p>
-
-    <div v-if="loading" class="opacity-80">Loading...</div>
-    <div v-else-if="error">Could not read git history.</div>
-    <template v-else-if="totals">
-      <section class="totals">
-        <div class="tile">
-          <div class="label">Churn</div>
-          <div class="value">{{ totals.churn }}</div>
-        </div>
-        <div class="tile">
-          <div class="label">Delta</div>
-          <div class="value">{{ totals.delta > 0 ? '+' : '' }}{{ totals.delta }}</div>
-        </div>
-        <div class="tile">
-          <div class="label">Added</div>
-          <div class="value">{{ totals.added }}</div>
-        </div>
-        <div class="tile">
-          <div class="label">Removed</div>
-          <div class="value">{{ totals.deleted }}</div>
-        </div>
-        <div class="tile">
-          <div class="label">Commits</div>
-          <div class="value">{{ totals.commits }}</div>
-        </div>
-      </section>
-
-      <section v-if="series.length === 0" class="card">
-        <h2>Trend</h2>
-        <p>No churn in this range. Try a longer period.</p>
-      </section>
-      <template v-else>
-        <ChartCard
-          title="Delta vs Churn"
-          :caption="granularityLabel"
-          :labels="labels"
-          :series="deltaVsChurn"
-        />
-        <ChartCard
-          title="Composition"
-          caption="Added and removed lines per period."
-          :labels="labels"
-          :series="composition"
-          stacked
-        />
-        <section class="card">
-          <h2>Cumulative churn</h2>
-          <p>Running total of churn across the range.</p>
-          <Area :labels="labels" :values="cumulative" />
-        </section>
-        <section class="card">
-          <h2>Deletion ratio</h2>
-          <p>Removed divided by added per period — rework pressure.</p>
-          <Bars :labels="labels" :series="deletionRatio" :height="180" />
-        </section>
-        <LabelPanel v-if="labelsByType.length" :labels="labelsByType" />
-        <RiskPanel :risk="risk" :selection="selection" @open="onRiskOpen" />
-        <p class="text-sm opacity-70">
-          Churn is total line movement, the risk signal. Delta is net growth. Read the
-          <button class="underline" @click="post({ type: 'openInfo' })">
-            churn and delta explainer</button
+    <header class="head">
+      <div class="head-title">
+        <h1>Churn trend</h1>
+        <p>
+          Line movement in the last <span class="figure">{{ presetLabel }}</span
+          >, grouped by <span class="figure">{{ baselineLabel }}</span
           >.
         </p>
-      </template>
+      </div>
+
+      <div class="controls">
+        <label class="field">
+          <span class="field-label">Range</span>
+          <select :value="preset" @change="onPreset">
+            <option v-for="option in presets" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <span class="field-hint">The window every number below uses.</span>
+        </label>
+
+        <label class="field">
+          <span class="field-label">
+            Baseline
+            <button
+              class="i"
+              title="What is a baseline?"
+              @click.prevent="post({ type: 'openInfo' })"
+            >
+              <span class="codicon codicon-info"></span>
+            </button>
+          </span>
+          <select :value="baseline" @change="onBaseline">
+            <option v-for="option in baselines" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <span class="field-hint"
+            >How periods are split: git tags, else merges, else calendar.</span
+          >
+        </label>
+
+        <div class="field">
+          <span class="field-label">
+            Metric
+            <button class="i" title="Churn vs delta" @click="post({ type: 'openInfo' })">
+              <span class="codicon codicon-info"></span>
+            </button>
+          </span>
+          <div class="segmented" role="group" aria-label="Metric">
+            <button
+              :class="{ on: metric === 'churn' }"
+              :aria-pressed="metric === 'churn'"
+              @click="onMetric('churn')"
+            >
+              Churn
+            </button>
+            <button
+              :class="{ on: metric === 'delta' }"
+              :aria-pressed="metric === 'delta'"
+              @click="onMetric('delta')"
+            >
+              Delta
+            </button>
+          </div>
+          <span class="field-hint">Churn = added + removed. Delta = added − removed.</span>
+        </div>
+
+        <label class="field">
+          <span class="field-label">Accent</span>
+          <select v-model="accent">
+            <option v-for="option in accents" :key="option" :value="option">{{ option }}</option>
+          </select>
+          <span class="field-hint">Colour of the churn marks.</span>
+        </label>
+      </div>
+    </header>
+
+    <div v-if="selection" class="filter">
+      <span class="filter-label">Showing</span>
+      <span class="filter-path" :title="selection">{{ selection }}</span>
+      <button class="filter-clear" @click="post({ type: 'select', path: null })">
+        <span class="codicon codicon-close"></span>Show all
+      </button>
+    </div>
+
+    <template v-if="loading">
+      <section class="stats">
+        <div v-for="n in 4" :key="n" class="stat">
+          <span class="skeleton sk-line" style="width: 46%"></span>
+          <span class="skeleton sk-line" style="width: 70%; height: 24px; margin-top: 8px"></span>
+        </div>
+      </section>
+      <div class="grid">
+        <div class="col">
+          <div class="sk-card">
+            <span class="skeleton sk-line" style="width: 30%"></span>
+            <div class="skeleton sk-chart" style="margin-top: 12px"></div>
+          </div>
+          <div class="sk-card">
+            <span class="skeleton sk-line" style="width: 22%"></span>
+            <div class="skeleton sk-chart" style="margin-top: 12px"></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="sk-card">
+            <span class="skeleton sk-line" style="width: 40%"></span>
+            <div class="skeleton sk-chart" style="height: 150px; margin-top: 12px"></div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <div v-else-if="error" class="card">Could not read git history.</div>
+
+    <template v-else-if="totals">
+      <section class="stats">
+        <div class="stat added" title="Lines added in the range">
+          <span class="stat-label">Added</span>
+          <span class="stat-value">{{ num(totals.added) }}</span>
+        </div>
+        <div class="stat removed" title="Lines removed in the range">
+          <span class="stat-label">Removed</span>
+          <span class="stat-value">{{ num(totals.deleted) }}</span>
+        </div>
+        <div
+          class="stat churn"
+          title="Churn: total line movement (added + removed), the risk signal"
+        >
+          <span class="stat-label">Churn</span>
+          <span class="stat-value">{{ num(totals.churn) }}</span>
+        </div>
+        <div
+          class="stat delta"
+          :class="totals.delta >= 0 ? 'grow' : 'shrink'"
+          title="Delta: net growth (added − removed)"
+        >
+          <span class="stat-label">Delta</span>
+          <span class="stat-value">{{ signed(totals.delta) }}</span>
+        </div>
+      </section>
+
+      <p class="stats-note">
+        <span class="figure">churn = added + removed</span> is total movement, the risk signal.
+        <span class="figure">delta = added − removed</span> is net growth.
+        <button class="i" @click="post({ type: 'openInfo' })">Read the explainer</button>
+      </p>
+
+      <section v-if="series.length === 0" class="card">
+        <h2>Nothing to plot</h2>
+        <p>No churn in this range. Try a longer range or a different baseline.</p>
+      </section>
+
+      <div v-else class="grid">
+        <div class="col">
+          <ChartCard
+            title="Delta vs Churn"
+            caption="Churn is total movement; delta is net growth. Grouped per period."
+            :labels="labels"
+            :series="deltaVsChurn"
+          />
+          <ChartCard
+            title="Added and removed"
+            caption="Lines added (green) and removed (red) each period. Modified lines need blame and arrive in a later phase."
+            :labels="labels"
+            :series="composition"
+            stacked
+          />
+          <section class="card">
+            <h2>Cumulative churn</h2>
+            <p>The running total of movement across the range.</p>
+            <div class="chart-wrap">
+              <Area :labels="labels" :values="cumulative" color="var(--churn)" />
+            </div>
+          </section>
+          <section class="card">
+            <h2>Deletion ratio</h2>
+            <p>Removed divided by added each period — the rework pressure.</p>
+            <div class="chart-wrap">
+              <Bars :labels="labels" :series="deletionRatio" :height="180" />
+            </div>
+          </section>
+        </div>
+
+        <div class="col">
+          <RiskPanel :risk="risk" :selection="selection" :limit="3" @open="onRiskOpen" />
+          <LabelPanel v-if="labelsByType.length" :labels="labelsByType" />
+        </div>
+      </div>
     </template>
   </main>
 </template>

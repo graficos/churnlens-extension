@@ -2,34 +2,42 @@
 import { computed } from 'vue';
 import type { RiskEntry } from '../../protocol';
 
-const props = defineProps<{ risk: RiskEntry[]; selection: string | null }>();
+const props = withDefaults(
+  defineProps<{ risk: RiskEntry[]; selection: string | null; limit?: number }>(),
+  { limit: 3 },
+);
 const emit = defineEmits<{ open: [path: string] }>();
 
-const max = computed(() => Math.max(1, ...props.risk.map((entry) => entry.churn)));
+const top = computed(() => props.risk.slice(0, props.limit));
+const max = computed(() => Math.max(1, ...top.value.map((entry) => entry.churn)));
 
 function width(entry: RiskEntry) {
-  return `${Math.max(2, (entry.churn / max.value) * 100)}%`;
+  return `${Math.max(3, (entry.churn / max.value) * 100)}%`;
 }
 </script>
 
 <template>
   <section class="card">
     <h2>Highest churn</h2>
-    <p>Paths with the most line movement. Click a bar to open the file.</p>
-    <ul class="bar-list">
-      <li v-for="entry in risk" :key="entry.path">
+    <p>The three riskiest paths by total movement. Click one to open the file.</p>
+    <ol class="rank">
+      <li v-for="(entry, index) in top" :key="entry.path">
         <button
-          class="bar-row"
+          class="rank-row"
           :class="{ selected: entry.path === selection }"
+          :title="entry.path"
           @click="emit('open', entry.path)"
         >
-          <span class="bar-name" :title="entry.path">{{ entry.name }}</span>
-          <span class="bar-track"
-            ><span class="bar-fill" :style="{ width: width(entry) }"></span
-          ></span>
-          <span class="bar-value">{{ entry.churn }}</span>
+          <span class="rank-num figure">{{ index + 1 }}</span>
+          <span class="rank-body">
+            <span class="rank-name">{{ entry.name }}</span>
+            <span class="rank-track">
+              <span class="rank-fill" :style="{ width: width(entry) }"></span>
+            </span>
+          </span>
+          <span class="rank-value figure">{{ entry.churn.toLocaleString() }}</span>
         </button>
       </li>
-    </ul>
+    </ol>
   </section>
 </template>

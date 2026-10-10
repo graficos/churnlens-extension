@@ -25,9 +25,19 @@ const loading = computed(
 );
 const error = computed(() => state.value?.status === 'error');
 
+const skeleton = ['82%', '64%', '74%', '52%', '88%', '60%', '70%', '46%'];
+
+function toggleSelect(path: string) {
+  post({ type: 'select', path: selection.value === path ? null : path });
+}
+
 provide('actions', {
-  select: (path: string) => post({ type: 'select', path: selection.value === path ? null : path }),
-  open: (path: string) => post({ type: 'openFile', path }),
+  filter: toggleSelect,
+  openTrend: (path: string) => {
+    toggleSelect(path);
+    post({ type: 'openTrend' });
+  },
+  openFile: (path: string) => post({ type: 'openFile', path }),
 });
 
 function onPreset(event: Event) {
@@ -60,7 +70,7 @@ function onMetric(event: Event) {
 </script>
 
 <template>
-  <div class="flex h-full flex-col">
+  <div class="flex min-h-screen flex-col">
     <div class="toolbar">
       <div class="row">
         <span>Range</span>
@@ -99,11 +109,13 @@ function onMetric(event: Event) {
     </div>
 
     <div class="flex-1 overflow-auto p-2">
-      <div v-if="loading" class="flex items-center gap-2 p-2 opacity-80">
-        <span
-          class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
-        ></span>
-        Loading...
+      <div v-if="loading" class="loading">
+        <div
+          v-for="(width, index) in skeleton"
+          :key="index"
+          class="skeleton sk-row"
+          :style="{ width }"
+        ></div>
       </div>
       <div v-else-if="error" class="p-2">Could not read git history.</div>
       <div v-else-if="tree.length === 0" class="p-2">
