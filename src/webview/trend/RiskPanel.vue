@@ -16,18 +16,18 @@ function width(entry: RiskEntry) {
   <section class="card">
     <h2>Highest churn</h2>
     <p>Paths with the most line movement. Click a bar to open the file.</p>
-    <ul class="risk">
+    <ul class="bar-list">
       <li v-for="entry in risk" :key="entry.path">
         <button
-          class="risk-row"
+          class="bar-row"
           :class="{ selected: entry.path === selection }"
           @click="emit('open', entry.path)"
         >
-          <span class="risk-name" :title="entry.path">{{ entry.name }}</span>
-          <span class="risk-track"
-            ><span class="risk-fill" :style="{ width: width(entry) }"></span
+          <span class="bar-name" :title="entry.path">{{ entry.name }}</span>
+          <span class="bar-track"
+            ><span class="bar-fill" :style="{ width: width(entry) }"></span
           ></span>
-          <span class="risk-value">{{ entry.churn }}</span>
+          <span class="bar-value">{{ entry.churn }}</span>
         </button>
       </li>
     </ul>
