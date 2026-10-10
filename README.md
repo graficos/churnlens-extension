@@ -9,7 +9,7 @@
   <h3 align="center">ChurnLens</h3>
 </div>
 
-**ChurnLens** helps you identify "hotspots" in your codebase by visualizing code churn directly in the IDE sidebar. Files that change frequently are highlighted with different colors in a custom "Churn Explorer" sidebar, allowing you to spot potential areas of instability, high churn or high maintenance at a glance.
+**ChurnLens** helps you identify "hotspots" in your codebase by visualizing Code Churn directly in the IDE. Files that change frequently are highlighted with different colors in a custom "Churn Explorer" sidebar, allowing you to spot potential areas of instability, high churn or high maintenance at a glance.
 
 ## Churn and Delta
 
@@ -35,7 +35,7 @@ This is the core idea of the research behind ChurnLens: removing a lot of code i
 
 That is why ChurnLens ranks risk by **churn**, not by delta. In the original study, churn predicted defects better than the number of change requests, the net delta, and the number of people involved. Read the full explanation in [`docs/churn-and-delta.md`](docs/churn-and-delta.md).
 
-This extension is inspired by the research on code churn as a predictor of defects:
+This extension is inspired by the research on Code Churn as a predictor of defects:
 
 > **[Code Churn: A Measure for Estimating the Impact of Code Change](https://sci-hub.reatk.com/10.1109/icsm.1998.738486)** > _J.C. Munson; S.G. Elbaum_
 > IEEE International Conference on Software Maintenance, 1998.
@@ -96,3 +96,9 @@ While the UI customization has been streamlined, you can still customize the 6 c
 
 - The opened folder must be a **Git repository**.
 - **Git** must be installed and available in your system PATH.
+
+## Development
+
+- Install dependencies with `pnpm`
+- Run launch task `Run Extension`. A new window will open. The terminal will keep a `watch` task running the code compilation on every change.
+- Select a repository and open the extension in the sidebar.

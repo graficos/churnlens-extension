@@ -44,34 +44,6 @@ Churn is the predictor. Delta is the direction. Never mix them. See
 Correct the data layer and the date handling. The existing tree view keeps
 working on top of the new output. No new visuals yet.
 
-- [x] **0.0 Move the study.** Copied to `docs/icsm.1998.738486.md`.
-- [x] **0.1 Rewrite `src/git.ts` around `--numstat`.** One pass:
-      `git log --numstat --no-renames --since --until --pretty=format:...`.
-      Parses hash, author, date, subject, and per-file added/deleted. `-` is
-      treated as zero (binary). Returns structured records via the pure parser
-      in `src/parse.ts`.
-      - Note: git does not combine `--name-status` with `--numstat`; it prints
-        only one. Added/removed/modified classification moves to Phase 1 via
-        window-boundary tree snapshots. Renames are reported as delete + add
-        (`--no-renames`), which counts the movement.
-- [x] **0.2 Resolve the repo root.** `git rev-parse --show-toplevel`; paths
-      resolve against the repo root; results filtered to the workspace folder.
-- [x] **0.3 Fix the UTC off-by-one.** Local `YYYY-MM-DD HH:mm:ss` passed to
-      `--since` / `--until`; no `toISOString()` on local dates.
-- [x] **0.4 Date range selector.** Presets 2d/3d/7d/30d plus custom native
-      `<input type="date">`. Persisted as `churnlens.rangePreset`,
-      `churnlens.rangeStart`, `churnlens.rangeEnd`.
-- [x] **0.5 Churn vs Delta affordance.** Toolbar metric selector (Churn/Delta)
-      and an inline info chip that opens `docs/churn-and-delta.md`. Risk colours
-      stay based on churn; the metric only changes the displayed number and sort.
-- [x] **0.6 Remove dead code.** Deleted `src/decorations.ts`.
-- [x] **0.7 Configuration.** Added `rangePreset`, `rangeStart`, `rangeEnd`,
-      `commitLabels` (Angular default), kept `hideRoot`, retired `periodDays`.
-- [x] **0.8 Loading state.** Sidebar shows a spinner while git runs. Extension
-      no longer activates at startup (`activationEvents: []`).
-- [x] **0.9 One test.** `src/parse.test.ts` via `npm run test:parse`. Covers
-      add, delete, binary, multi-commit aggregation, and subject spacing.
-
 **Out of Phase 0:** the path-prefix/grouping rework. The shared `isWithin`
 helper is now correct and used for workspace filtering, but the folder
 aggregation structure is otherwise unchanged.
