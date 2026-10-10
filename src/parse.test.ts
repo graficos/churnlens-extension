@@ -1,5 +1,4 @@
-import { test } from 'node:test';
-import * as assert from 'node:assert';
+import { describe, expect, it } from 'vite-plus/test';
 import { parseNumstat, toFileChurnMap } from './parse';
 
 const SEP = '\u001f';
@@ -16,36 +15,38 @@ const RAW = [
   '10\t0\tsrc/b.ts',
 ].join('\n');
 
-test('parses records and treats binary as zero', () => {
-  const records = parseNumstat(RAW);
-  assert.equal(records.length, 4);
+describe('parseNumstat', () => {
+  it('parses records and treats binary as zero', () => {
+    const records = parseNumstat(RAW);
+    expect(records.length).toBe(4);
 
-  const binary = records.find((r) => r.path === 'assets/logo.png');
-  assert.ok(binary);
-  assert.equal(binary?.added, 0);
-  assert.equal(binary?.deleted, 0);
+    const binary = records.find((r) => r.path === 'assets/logo.png');
+    expect(binary).toBeTruthy();
+    expect(binary?.added).toBe(0);
+    expect(binary?.deleted).toBe(0);
 
-  const withSpaces = records.find((r) => r.subject === 'fix: edit a');
-  assert.ok(withSpaces);
-});
+    const withSpaces = records.find((r) => r.subject === 'fix: edit a');
+    expect(withSpaces).toBeTruthy();
+  });
 
-test('aggregates churn and delta per file and counts commits', () => {
-  const map = toFileChurnMap(parseNumstat(RAW), (p) => '/repo/' + p);
+  it('aggregates churn and delta per file and counts commits', () => {
+    const map = toFileChurnMap(parseNumstat(RAW), (p) => '/repo/' + p);
 
-  const a = map.get('/repo/src/a.ts');
-  assert.ok(a);
-  assert.equal(a?.added, 3);
-  assert.equal(a?.deleted, 5);
-  assert.equal(a?.churn, 8);
-  assert.equal(a?.delta, -2);
-  assert.equal(a?.commits, 2);
+    const a = map.get('/repo/src/a.ts');
+    expect(a).toBeTruthy();
+    expect(a?.added).toBe(3);
+    expect(a?.deleted).toBe(5);
+    expect(a?.churn).toBe(8);
+    expect(a?.delta).toBe(-2);
+    expect(a?.commits).toBe(2);
 
-  const b = map.get('/repo/src/b.ts');
-  assert.equal(b?.churn, 10);
-  assert.equal(b?.delta, 10);
-  assert.equal(b?.commits, 1);
+    const b = map.get('/repo/src/b.ts');
+    expect(b?.churn).toBe(10);
+    expect(b?.delta).toBe(10);
+    expect(b?.commits).toBe(1);
 
-  const binary = map.get('/repo/assets/logo.png');
-  assert.equal(binary?.churn, 0);
-  assert.equal(binary?.commits, 1);
+    const binary = map.get('/repo/assets/logo.png');
+    expect(binary?.churn).toBe(0);
+    expect(binary?.commits).toBe(1);
+  });
 });

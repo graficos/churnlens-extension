@@ -2,10 +2,10 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "type": "npm",
-      "script": "watch",
-      "problemMatcher": "$tsc-watch",
-      "isBackground": true,
+      "label": "ChurnLens build",
+      "type": "shell",
+      "command": "pnpm run build",
+      "problemMatcher": [],
       "presentation": {
         "reveal": "never"
       },
@@ -15,10 +15,11 @@
       }
     },
     {
-      "type": "npm",
-      "script": "compile",
-      "label": "ChurnLens compile",
-      "problemMatcher": "$tsc",
+      "label": "ChurnLens watch",
+      "type": "shell",
+      "command": "pnpm run watch",
+      "isBackground": true,
+      "problemMatcher": [],
       "presentation": {
         "reveal": "never"
       },
