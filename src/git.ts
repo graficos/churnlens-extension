@@ -1,10 +1,29 @@
 import simpleGit, { SimpleGit } from 'simple-git';
 import * as path from 'path';
 import { Logger } from './logger';
+import { isWithin } from './paths';
+import { DateRange } from './config';
+import {
+  FileChurn,
+  parseNumstat,
+  toFileChurnMap,
+} from './parse';
+
+const HEADER = '@@@';
+const SEP = '\u001f';
+
+export function formatGitDate(date: Date): string {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return (
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
+    `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+  );
+}
 
 export class GitService {
   private git: SimpleGit;
   private rootPath: string;
+  private repoRoot?: string;
 
   constructor(rootPath: string) {
     this.rootPath = rootPath;
@@ -12,56 +31,63 @@ export class GitService {
     Logger.log(`GitService initialized for root: ${rootPath}`);
   }
 
-  async getFileHistory(days: number): Promise<Map<string, number>> {
-    const date = new Date();
-    date.setDate(date.getDate() - days);
-    const since = date.toISOString().split('T')[0];
+  async getRepoRoot(): Promise<string> {
+    if (this.repoRoot) {
+      return this.repoRoot;
+    }
+    try {
+      const top = await this.git.raw(['rev-parse', '--show-toplevel']);
+      this.repoRoot = top.trim() || this.rootPath;
+    } catch (e) {
+      Logger.error('Error resolving repo root', e);
+      this.repoRoot = this.rootPath;
+    }
+    return this.repoRoot;
+  }
 
-    Logger.log(`Fetching git history since ${since}`);
+  async getHead(): Promise<string> {
+    try {
+      return (await this.git.raw(['rev-parse', 'HEAD'])).trim();
+    } catch (e) {
+      Logger.error('Error resolving HEAD', e);
+      return '';
+    }
+  }
+
+  async getFileHistory(range: DateRange): Promise<Map<string, FileChurn>> {
+    const repoRoot = await this.getRepoRoot();
+    const since = formatGitDate(range.since);
+    const until = formatGitDate(range.until);
+
+    Logger.log(`Fetching git churn from ${since} to ${until}`);
 
     try {
-      // Using raw log command
-      // Format: --name-only to get file list
-      const rawLog = await this.git.raw([
+      const raw = await this.git.raw([
         'log',
         `--since=${since}`,
-        '--name-only',
-        '--pretty=format:',
+        `--until=${until}`,
+        '--numstat',
+        '--no-renames',
+        `--pretty=format:${HEADER}%H${SEP}%an${SEP}%cI${SEP}%s`,
       ]);
 
-      const fileCounts = new Map<string, number>();
-      const lines = rawLog.split('\n');
-      let count = 0;
+      const records = parseNumstat(raw);
+      const repoMap = toFileChurnMap(records, (filePath) =>
+        path.resolve(repoRoot, filePath)
+      );
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        // Ignore empty lines
-        if (!trimmed) continue;
-
-        // Git returns relative paths from root. Decoration provider gives us absolute paths.
-        // We must normalize to absolute paths.
-        // NOTE: Git always uses forward slashes. Path.resolve should handle OS separators.
-        try {
-          const absPath = path.resolve(this.rootPath, trimmed);
-          // On Windows/Mac, casing might matter or not. VS Code usually uses exact path.
-          // Let's store exact absolute path.
-          fileCounts.set(absPath, (fileCounts.get(absPath) || 0) + 1);
-          count++;
-        } catch (e) {
-          Logger.error(`Error resolving path for line: ${trimmed}`, e);
+      const workspaceMap = new Map<string, FileChurn>();
+      for (const [absPath, entry] of repoMap) {
+        if (isWithin(this.rootPath, absPath)) {
+          workspaceMap.set(absPath, entry);
         }
       }
 
       Logger.log(
-        `Processed ${count} file changes across ${fileCounts.size} unique files.`
+        `Processed ${records.length} file changes across ${workspaceMap.size} unique files.`
       );
-      // Debug: print top 5 changed files
-      const top5 = Array.from(fileCounts.entries())
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
-      Logger.log('Top 5 changed files (paths might be absolute):', top5);
 
-      return fileCounts;
+      return workspaceMap;
     } catch (e) {
       Logger.error('Error fetching git history:', e);
       return new Map();

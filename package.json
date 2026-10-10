@@ -124,10 +124,39 @@
     "configuration": {
       "title": "ChurnLens",
       "properties": {
-        "churnlens.periodDays": {
-          "type": "number",
-          "default": 30,
-          "description": "Number of days to look back in git history."
+        "churnlens.rangePreset": {
+          "type": "string",
+          "enum": [
+            "2d",
+            "3d",
+            "7d",
+            "30d",
+            "custom"
+          ],
+          "enumDescriptions": [
+            "Last 2 days",
+            "Last 3 days",
+            "Last 7 days",
+            "Last 30 days",
+            "Use churnlens.rangeStart and churnlens.rangeEnd"
+          ],
+          "default": "30d",
+          "description": "Time window for churn calculation."
+        },
+        "churnlens.rangeStart": {
+          "type": "string",
+          "default": "",
+          "description": "Custom range start date (YYYY-MM-DD). Used when churnlens.rangePreset is 'custom'."
+        },
+        "churnlens.rangeEnd": {
+          "type": "string",
+          "default": "",
+          "description": "Custom range end date (YYYY-MM-DD). Used when churnlens.rangePreset is 'custom'."
+        },
+        "churnlens.commitLabels": {
+          "type": "string",
+          "default": "feat,fix,docs,style,refactor,perf,test,build,ci,chore,revert",
+          "description": "Comma separated Conventional Commit labels used to group churn. Defaults to the Angular convention."
         },
         "churnlens.hideRoot": {
           "type": "boolean",
@@ -143,6 +172,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "package": "tsc -p ./",
+    "test:parse": "tsc -p ./ && node --test dist/parse.test.js",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
