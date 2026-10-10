@@ -3,11 +3,7 @@ import * as path from 'path';
 import { Logger } from './logger';
 import { isWithin } from './paths';
 import { DateRange } from './config';
-import {
-  FileChurn,
-  parseNumstat,
-  toFileChurnMap,
-} from './parse';
+import { FileChurn, parseNumstat, toFileChurnMap } from './parse';
 
 const HEADER = '@@@';
 const SEP = '\u001f';
@@ -72,9 +68,7 @@ export class GitService {
       ]);
 
       const records = parseNumstat(raw);
-      const repoMap = toFileChurnMap(records, (filePath) =>
-        path.resolve(repoRoot, filePath)
-      );
+      const repoMap = toFileChurnMap(records, (filePath) => path.resolve(repoRoot, filePath));
 
       const workspaceMap = new Map<string, FileChurn>();
       for (const [absPath, entry] of repoMap) {
@@ -84,7 +78,7 @@ export class GitService {
       }
 
       Logger.log(
-        `Processed ${records.length} file changes across ${workspaceMap.size} unique files.`
+        `Processed ${records.length} file changes across ${workspaceMap.size} unique files.`,
       );
 
       return workspaceMap;

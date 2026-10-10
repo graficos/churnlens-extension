@@ -55,10 +55,7 @@ export class ConfigManager {
   static getCommitLabels(): string[] {
     const raw = vscode.workspace
       .getConfiguration('churnlens')
-      .get<string>(
-        'commitLabels',
-        'feat,fix,docs,style,refactor,perf,test,build,ci,chore,revert'
-      );
+      .get<string>('commitLabels', 'feat,fix,docs,style,refactor,perf,test,build,ci,chore,revert');
     return raw
       .split(',')
       .map((label) => label.trim())

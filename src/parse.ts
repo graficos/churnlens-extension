@@ -22,9 +22,7 @@ const SEP = '\u001f';
 
 export function parseNumstat(raw: string): RawChange[] {
   const records: RawChange[] = [];
-  let current:
-    | { commit: string; author: string; date: string; subject: string }
-    | undefined;
+  let current: { commit: string; author: string; date: string; subject: string } | undefined;
 
   for (const rawLine of raw.split('\n')) {
     const line = rawLine.replace(/\r$/, '');
@@ -33,9 +31,7 @@ export function parseNumstat(raw: string): RawChange[] {
     }
 
     if (line.startsWith(HEADER)) {
-      const [commit, author, date, ...subjectParts] = line
-        .slice(HEADER.length)
-        .split(SEP);
+      const [commit, author, date, ...subjectParts] = line.slice(HEADER.length).split(SEP);
       current = {
         commit: commit || '',
         author: author || '',
@@ -75,7 +71,7 @@ export function parseNumstat(raw: string): RawChange[] {
 
 export function toFileChurnMap(
   records: RawChange[],
-  toAbsolute: (path: string) => string
+  toAbsolute: (path: string) => string,
 ): Map<string, FileChurn> {
   const map = new Map<string, FileChurn>();
   const commitsPerFile = new Map<string, Set<string>>();

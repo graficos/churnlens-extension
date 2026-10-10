@@ -13,9 +13,7 @@ export class Logger {
   static log(message: string, data?: any) {
     const timestamp = new Date().toLocaleTimeString();
     if (data) {
-      this.outputChannel.appendLine(
-        `[${timestamp}] ${message} ${JSON.stringify(data, null, 2)}`
-      );
+      this.outputChannel.appendLine(`[${timestamp}] ${message} ${JSON.stringify(data, null, 2)}`);
     } else {
       this.outputChannel.appendLine(`[${timestamp}] ${message}`);
     }

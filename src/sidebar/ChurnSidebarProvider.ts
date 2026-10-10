@@ -25,19 +25,19 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
 
   constructor(
     private readonly _extensionUri: vscode.Uri,
-    private readonly gitService: GitService
+    private readonly gitService: GitService,
   ) {}
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
     _context: vscode.WebviewViewResolveContext,
-    _token: vscode.CancellationToken
+    _token: vscode.CancellationToken,
   ) {
     this._view = webviewView;
 
     webviewView.onDidChangeVisibility(() => {
       if (webviewView.visible) {
-        this.refresh();
+        void this.refresh();
       }
     });
 
@@ -51,10 +51,10 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
     webviewView.webview.onDidReceiveMessage((data) => {
       switch (data.type) {
         case 'ready':
-          this.refresh();
+          void this.refresh();
           break;
         case 'refresh':
-          this.refresh();
+          void this.refresh();
           break;
         case 'openFile':
           this.openFile(data.path);
@@ -66,14 +66,14 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
           this.openInfo();
           break;
         case 'setPreset':
-          this.updateSetting('rangePreset', data.value);
+          void this.updateSetting('rangePreset', data.value);
           break;
         case 'setCustomRange':
-          this.setCustomRange(data.start, data.end);
+          void this.setCustomRange(data.start, data.end);
           break;
         case 'setMetric':
           this._metric = data.value === 'delta' ? 'delta' : 'churn';
-          this.refresh();
+          void this.refresh();
           break;
       }
     });
@@ -84,11 +84,7 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
   }
 
   private openInfo() {
-    const docUri = vscode.Uri.joinPath(
-      this._extensionUri,
-      'docs',
-      'churn-and-delta.md'
-    );
+    const docUri = vscode.Uri.joinPath(this._extensionUri, 'docs', 'churn-and-delta.md');
     vscode.window.showTextDocument(docUri, { preview: true });
   }
 
@@ -102,11 +98,7 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
     const config = vscode.workspace.getConfiguration('churnlens');
     await config.update('rangeStart', start, vscode.ConfigurationTarget.Global);
     await config.update('rangeEnd', end, vscode.ConfigurationTarget.Global);
-    await config.update(
-      'rangePreset',
-      'custom',
-      vscode.ConfigurationTarget.Global
-    );
+    await config.update('rangePreset', 'custom', vscode.ConfigurationTarget.Global);
   }
 
   public async refresh() {
@@ -213,17 +205,18 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
   }
 
   private _getHtmlForWebview() {
-    const codiconsUri = this._view?.webview.asWebviewUri(
-      vscode.Uri.joinPath(
-        this._extensionUri,
-        'node_modules',
-        '@vscode/codicons',
-        'dist',
-        'codicon.css'
-      )
-    );
-
-    const preset = ConfigManager.getRange().preset;
+    const codiconsUri =
+      this._view?.webview
+        .asWebviewUri(
+          vscode.Uri.joinPath(
+            this._extensionUri,
+            'node_modules',
+            '@vscode/codicons',
+            'dist',
+            'codicon.css',
+          ),
+        )
+        .toString() ?? '';
 
     return `<!DOCTYPE html>
       <html lang="en">
