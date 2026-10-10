@@ -71,6 +71,10 @@
         "title": "ChurnLens: Refresh Stats"
       },
       {
+        "command": "churnlens.openTrend",
+        "title": "ChurnLens: Open Trend"
+      },
+      {
         "command": "churnlens.openInGithub",
         "title": "See git history in github"
       }
