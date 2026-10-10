@@ -3,8 +3,7 @@
  */
 import { ref, type Ref } from 'vue';
 import type { ExtToWeb, ViewState, WebToExt } from '../../protocol';
-
-const vscode = acquireVsCodeApi();
+import { vscode } from './vscode';
 
 export interface StoreHandle {
   state: Ref<ViewState | null>;

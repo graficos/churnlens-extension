@@ -12,6 +12,19 @@
   --chart-modified: var(--vscode-charts-yellow, #cca700);
 }
 
+:root[data-accent='blue'] {
+  --color-primary: var(--vscode-charts-blue, #3794ff);
+}
+:root[data-accent='green'] {
+  --color-primary: var(--vscode-charts-green, #89d185);
+}
+:root[data-accent='purple'] {
+  --color-primary: var(--vscode-charts-purple, #b180d7);
+}
+:root[data-accent='amber'] {
+  --color-primary: var(--vscode-charts-orange, #d18616);
+}
+
 body {
   margin: 0;
   padding: 0;
