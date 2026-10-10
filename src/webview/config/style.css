@@ -1,0 +1,7 @@
+@import 'tailwindcss';
+@plugin 'daisyui';
+
+body {
+  background: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+}
