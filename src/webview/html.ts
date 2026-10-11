@@ -16,7 +16,11 @@ function readManifest(extensionUri: vscode.Uri): Manifest {
     '.vite',
     'manifest.json',
   ).fsPath;
-  return JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as Manifest;
+  try {
+    return JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as Manifest;
+  } catch {
+    throw new Error('ChurnLens: webview assets are missing. Run "pnpm run build" and reload.');
+  }
 }
 
 function getNonce(): string {
@@ -37,6 +41,9 @@ export function webviewHtml(
 ): string {
   const root = vscode.Uri.joinPath(extensionUri, 'dist', 'webview');
   const chunk = readManifest(extensionUri)[entry];
+  if (!chunk) {
+    throw new Error(`ChurnLens: no webview bundle for "${entry}". Run "pnpm run build".`);
+  }
   const nonce = getNonce();
 
   const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(root, chunk.file)).toString();
