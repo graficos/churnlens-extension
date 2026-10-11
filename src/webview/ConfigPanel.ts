@@ -6,7 +6,6 @@ interface ConfigPayload {
   preset: RangePreset;
   start: string;
   end: string;
-  hideRoot: boolean;
   commitLabels: string;
 }
 
@@ -61,7 +60,6 @@ export class ConfigPanel {
     await config.update('rangePreset', payload.preset, target);
     await config.update('rangeStart', payload.start, target);
     await config.update('rangeEnd', payload.end, target);
-    await config.update('hideRoot', payload.hideRoot, target);
     await config.update('commitLabels', payload.commitLabels, target);
   }
 
@@ -79,7 +77,6 @@ export class ConfigPanel {
       preset: config.get<RangePreset>('rangePreset', '30d'),
       start: config.get<string>('rangeStart', ''),
       end: config.get<string>('rangeEnd', ''),
-      hideRoot: config.get<boolean>('hideRoot', true),
       commitLabels: ConfigManager.getCommitLabels().join(', '),
     };
 

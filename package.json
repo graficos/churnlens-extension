@@ -179,11 +179,6 @@
           "default": "feat,fix,docs,style,refactor,perf,test,build,ci,chore,revert",
           "description": "Comma separated Conventional Commit labels used to group churn. Defaults to the Angular convention."
         },
-        "churnlens.hideRoot": {
-          "type": "boolean",
-          "default": true,
-          "description": "Hide the root project folder from the Churn Explorer."
-        },
         "churnlens.baseline": {
           "type": "string",
           "enum": [

@@ -9,11 +9,11 @@ const props = defineProps<{
 }>();
 
 const actions = inject<{
-  filter: (path: string) => void;
+  filter: (path: string | null) => void;
   openTrend: (path: string) => void;
   openFile: (path: string) => void;
 }>('actions')!;
-const open = ref(false);
+const open = ref(props.node.isRoot);
 
 const selected = computed(() => props.selection === props.node.path);
 const value = computed(() => {
@@ -39,7 +39,10 @@ const iconClass = computed(() => {
 });
 
 function onRow() {
-  if (props.node.isDir) {
+  if (props.node.isRoot) {
+    open.value = true;
+    actions.filter(null);
+  } else if (props.node.isDir) {
     open.value = !open.value;
     actions.filter(props.node.path);
   } else {
@@ -52,7 +55,7 @@ function onRow() {
   <li>
     <div
       class="node"
-      :class="['level-' + node.level, { selected }]"
+      :class="['level-' + node.level, { selected, root: node.isRoot }]"
       :data-vscode-context="context"
       :title="node.path"
       @click="onRow"

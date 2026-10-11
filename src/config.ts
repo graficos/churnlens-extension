@@ -64,10 +64,6 @@ export class ConfigManager {
       .filter(Boolean);
   }
 
-  static getHideRoot(): boolean {
-    return vscode.workspace.getConfiguration('churnlens').get('hideRoot', true);
-  }
-
   static getBaseline(): Baseline {
     return vscode.workspace.getConfiguration('churnlens').get<Baseline>('baseline', 'auto');
   }

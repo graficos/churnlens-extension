@@ -5,7 +5,6 @@ interface ConfigPayload {
   preset: string;
   start: string;
   end: string;
-  hideRoot: boolean;
   commitLabels: string;
 }
 
@@ -16,7 +15,6 @@ const state = reactive({
   preset: config.preset || '30d',
   start: config.start || '',
   end: config.end || '',
-  hideRoot: config.hideRoot ?? true,
   commitLabels: config.commitLabels || '',
 });
 
@@ -50,11 +48,6 @@ function save() {
         <input v-model="state.end" type="date" class="input input-bordered input-sm" />
       </label>
     </div>
-
-    <label class="label cursor-pointer justify-start gap-3">
-      <input v-model="state.hideRoot" type="checkbox" class="checkbox checkbox-sm" />
-      <span>Hide the root project folder</span>
-    </label>
 
     <label class="form-control w-full">
       <span class="label-text mb-1">Commit labels (comma separated)</span>

@@ -90,7 +90,6 @@ export class ChurnStore {
     }
 
     const range = ConfigManager.getRange();
-    const hideRoot = ConfigManager.getHideRoot();
     const labels = ConfigManager.getCommitLabels();
     const baseline = ConfigManager.getBaseline();
     // Drop the result of a superseded refresh (rapid clicks, debounced config).
@@ -130,7 +129,7 @@ export class ChurnStore {
         selection: this.selection,
         baseline,
         totals: totalsOf(scoped),
-        tree: buildTree(data.files, this.rootPath, hideRoot),
+        tree: buildTree(data.files, this.rootPath),
         series,
         cumulative: cumulative(series),
         labels: groupByLabel(scoped, labels),

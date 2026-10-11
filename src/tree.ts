@@ -12,6 +12,7 @@ export interface TreeNode {
   deleted: number;
   level: number;
   isDir: boolean;
+  isRoot: boolean;
   children: TreeNode[];
 }
 
@@ -19,23 +20,21 @@ interface MutableNode extends Omit<TreeNode, 'children'> {
   children: Record<string, MutableNode>;
 }
 
-export function buildTree(
-  files: Map<string, FileChurn>,
-  rootPath: string,
-  hideRoot: boolean,
-): TreeNode[] {
+export function buildTree(files: Map<string, FileChurn>, rootPath: string): TreeNode[] {
   const items = ChurnCalculator.aggregate(files, rootPath);
   const levels = ChurnCalculator.levels(items);
 
+  const rootAggregate = items.get(rootPath);
   const root: MutableNode = {
-    name: 'root',
+    name: path.basename(rootPath) || 'workspace',
     path: rootPath,
-    churn: 0,
-    delta: 0,
-    added: 0,
-    deleted: 0,
+    churn: rootAggregate?.churn ?? 0,
+    delta: rootAggregate?.delta ?? 0,
+    added: rootAggregate?.added ?? 0,
+    deleted: rootAggregate?.deleted ?? 0,
     level: levels.get(rootPath) || 0,
     isDir: true,
+    isRoot: true,
     children: {},
   };
 
@@ -61,6 +60,7 @@ export function buildTree(
           deleted: aggregate?.deleted ?? 0,
           level: levels.get(currentPath) || 0,
           isDir: !files.has(currentPath),
+          isRoot: false,
           children: {},
         };
       }
@@ -68,8 +68,7 @@ export function buildTree(
     }
   }
 
-  const roots = hideRoot ? Object.values(root.children) : [root];
-  return roots.map(serialize);
+  return [serialize(root)];
 }
 
 function serialize(node: MutableNode): TreeNode {
@@ -85,6 +84,7 @@ function serialize(node: MutableNode): TreeNode {
     deleted: node.deleted,
     level: node.level,
     isDir: node.isDir,
+    isRoot: node.isRoot,
     children,
   };
 }

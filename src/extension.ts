@@ -109,7 +109,6 @@ function activateInternal(context: vscode.ExtensionContext) {
         e.affectsConfiguration('churnlens.rangeStart') ||
         e.affectsConfiguration('churnlens.rangeEnd') ||
         e.affectsConfiguration('churnlens.commitLabels') ||
-        e.affectsConfiguration('churnlens.hideRoot') ||
         e.affectsConfiguration('churnlens.baseline')
       ) {
         scheduleRefresh();
