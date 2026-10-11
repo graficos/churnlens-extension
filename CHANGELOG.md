@@ -39,7 +39,8 @@ Phases 0 and 1: the churn data layer, the Churn Explorer, and the Trend view.
 - The Churn Explorer is now a Vue + Tailwind + DaisyUI webview, built with a
   Vite+ toolchain (Rolldown, Oxc, Vitest).
 - The tree shows churn and delta columns; a file row opens the trend filtered
-  to that file, with a button to open the file in the editor.
+  to that file, with a button to open the file in the editor. A folder row
+  expands in place and opens the trend filtered to that folder.
 - Theme-aware colours throughout, following the VS Code theme.
 
 ### Fixed

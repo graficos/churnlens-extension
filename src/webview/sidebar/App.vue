@@ -30,14 +30,9 @@ const error = computed(() => state.value?.status === 'error');
 
 const skeleton = ['82%', '64%', '74%', '52%', '88%', '60%', '70%', '46%'];
 
-function toggleSelect(path: string | null) {
-  post({ type: 'select', path: selection.value === path ? null : path });
-}
-
 provide('actions', {
-  filter: toggleSelect,
-  openTrend: (path: string) => {
-    toggleSelect(path);
+  openTrend: (path: string | null) => {
+    post({ type: 'select', path });
     post({ type: 'openTrend' });
   },
   openFile: (path: string) => post({ type: 'openFile', path }),

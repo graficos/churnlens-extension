@@ -9,8 +9,7 @@ const props = defineProps<{
 }>();
 
 const actions = inject<{
-  filter: (path: string | null) => void;
-  openTrend: (path: string) => void;
+  openTrend: (path: string | null) => void;
   openFile: (path: string) => void;
 }>('actions')!;
 const open = ref(props.node.isRoot);
@@ -41,10 +40,10 @@ const iconClass = computed(() => {
 function onRow() {
   if (props.node.isRoot) {
     open.value = true;
-    actions.filter(null);
+    actions.openTrend(null);
   } else if (props.node.isDir) {
     open.value = !open.value;
-    actions.filter(props.node.path);
+    actions.openTrend(props.node.path);
   } else {
     actions.openTrend(props.node.path);
   }
