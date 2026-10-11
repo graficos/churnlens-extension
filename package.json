@@ -1,7 +1,7 @@
 {
   "name": "churnlens",
   "displayName": "ChurnLens",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "description": "Visualizes code churn in a Churn Explorer",
   "categories": [
     "Other"
@@ -18,7 +18,7 @@
   "main": "./dist/extension.js",
   "scripts": {
     "vscode:prepublish": "vp build && vp pack",
-    "vscode:publish": "vsce package && vsce publish",
+    "vscode:publish": "vsce package --no-dependencies && vsce publish --no-dependencies",
     "build": "vp build && vp pack",
     "compile": "vp build && vp pack",
     "watch": "vp build --watch & vp pack --watch",
@@ -27,16 +27,15 @@
     "fmt": "vp fmt",
     "test": "vp test"
   },
-  "dependencies": {
-    "@vscode/codicons": "^0.0.44",
-    "simple-git": "^3.19.1"
-  },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^22.20.5",
     "@types/vscode": "^1.90.0",
     "@vitejs/plugin-vue": "^6.0.9",
+    "@vscode/codicons": "^0.0.44",
+    "@vscode/vsce": "^4.0.0",
     "daisyui": "^5.7.47",
+    "simple-git": "^3.19.1",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.1.3",
     "vite-plus": "^1.1.0",
