@@ -22,10 +22,16 @@ const presets: { value: RangePreset; label: string }[] = [
 
 const baselines: { value: Baseline; label: string }[] = [
   { value: 'auto', label: 'Auto' },
-  { value: 'tags', label: 'Git tags' },
+  { value: 'tags', label: 'Semver tags' },
   { value: 'merges', label: 'Merge commits' },
   { value: 'time', label: 'Calendar' },
 ];
+
+const groupingNames: Record<Exclude<Baseline, 'auto'>, string> = {
+  tags: 'semver tags',
+  merges: 'merge commits',
+  time: 'calendar buckets',
+};
 
 const preset = computed(() => state.value?.preset ?? '30d');
 const baseline = computed(() => state.value?.baseline ?? 'auto');
@@ -45,11 +51,7 @@ const rangePhrase = computed(() =>
 );
 const groupingLabel = computed(
   () =>
-    ({
-      tags: 'semver tags',
-      merges: 'merge commits',
-      time: 'calendar buckets',
-    })[state.value?.grouping ?? 'time'],
+    groupingNames[baseline.value === 'auto' ? (state.value?.grouping ?? 'time') : baseline.value],
 );
 
 const labels = computed(() => series.value.map((point) => point.label));
@@ -106,7 +108,8 @@ function onRiskOpen(path: string) {
         <h1>Churn trend</h1>
         <p>
           Line movement over <span class="figure">{{ rangePhrase }}</span
-          >, grouped by <span class="figure">{{ groupingLabel }}</span
+          >, grouped<span v-if="baseline === 'auto'"> automatically</span> by
+          <span class="figure">{{ groupingLabel }}</span
           >.
         </p>
       </div>
