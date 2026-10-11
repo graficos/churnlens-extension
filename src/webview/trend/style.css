@@ -125,6 +125,18 @@
   border-radius: 8px;
   border-left: 3px solid var(--churn);
   background: color-mix(in srgb, var(--churn) 13%, transparent);
+  animation: filter-in 350ms ease-out;
+}
+
+@keyframes filter-in {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 .filter .filter-label {

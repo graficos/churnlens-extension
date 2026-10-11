@@ -119,6 +119,18 @@ While the UI customization has been streamlined, you can still customize the 6 c
 
 ## Development
 
+### Launch debugger in an extension dev host
+
 - Install dependencies with `pnpm`
 - Run launch task `Run Extension`. A new window will open. The terminal will keep a `watch` task running the code compilation on every change.
 - Select a repository and open the extension in the sidebar.
+
+### Quick test without debugger
+
+Run in the Terminal:
+
+```
+code --extensionDevelopmentPath="$PWD"
+```
+
+(You need to have `code` command in th `$PATH`.)
