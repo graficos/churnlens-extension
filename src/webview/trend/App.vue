@@ -172,7 +172,7 @@ function onRiskOpen(path: string) {
       </div>
     </header>
 
-    <div v-if="selection" class="filter">
+    <div v-if="selection" :key="selection" class="filter">
       <span class="filter-label">Showing</span>
       <span class="filter-path" :title="selection">{{ selection }}</span>
       <button class="filter-clear" @click="post({ type: 'select', path: null })">
