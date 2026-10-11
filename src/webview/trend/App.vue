@@ -38,11 +38,18 @@ const loading = computed(
 );
 const error = computed(() => state.value?.status === 'error');
 
-const presetLabel = computed(
-  () => presets.find((p) => p.value === preset.value)?.label ?? '30 days',
+const rangePhrase = computed(() =>
+  preset.value === 'custom'
+    ? 'the selected date range'
+    : `the last ${presets.find((p) => p.value === preset.value)?.label ?? '30 days'}`,
 );
-const baselineLabel = computed(
-  () => baselines.find((b) => b.value === baseline.value)?.label ?? 'auto',
+const groupingLabel = computed(
+  () =>
+    ({
+      tags: 'semver tags',
+      merges: 'merge commits',
+      time: 'calendar buckets',
+    })[state.value?.grouping ?? 'time'],
 );
 
 const labels = computed(() => series.value.map((point) => point.label));
@@ -98,8 +105,8 @@ function onRiskOpen(path: string) {
       <div class="head-title">
         <h1>Churn trend</h1>
         <p>
-          Line movement in the last <span class="figure">{{ presetLabel }}</span
-          >, grouped by <span class="figure">{{ baselineLabel }}</span
+          Line movement over <span class="figure">{{ rangePhrase }}</span
+          >, grouped by <span class="figure">{{ groupingLabel }}</span
           >.
         </p>
       </div>

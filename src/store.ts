@@ -49,6 +49,7 @@ export class ChurnStore {
       end: '',
       selection: null,
       baseline: 'auto',
+      grouping: 'time',
       totals: { added: 0, deleted: 0, churn: 0, delta: 0, commits: 0 },
       tree: [],
       series: [],
@@ -117,7 +118,7 @@ export class ChurnStore {
 
       const scoped = selectRecords(data.records, this.selection);
       const granularity = autoGranularity(range.since, range.until);
-      const series = await this.seriesFor(scoped, baseline, granularity);
+      const { series, grouping } = await this.seriesFor(scoped, baseline, granularity);
       if (id !== this.requestId) return;
 
       this.state = {
@@ -128,6 +129,7 @@ export class ChurnStore {
         end: toDateInput(range.until),
         selection: this.selection,
         baseline,
+        grouping,
         totals: totalsOf(scoped),
         tree: buildTree(data.files, this.rootPath),
         series,
@@ -148,9 +150,9 @@ export class ChurnStore {
     records: RawChange[],
     baseline: Baseline,
     granularity: Granularity,
-  ): Promise<TimeBucket[]> {
+  ): Promise<{ series: TimeBucket[]; grouping: Exclude<Baseline, 'auto'> }> {
     if (baseline === 'time') {
-      return bucketByTime(records, granularity);
+      return { series: bucketByTime(records, granularity), grouping: 'time' };
     }
 
     const kind = baseline === 'auto' ? 'tags' : baseline;
@@ -160,8 +162,8 @@ export class ChurnStore {
     }
 
     return boundaries.length >= 2
-      ? bucketByBoundaries(records, boundaries)
-      : bucketByTime(records, granularity);
+      ? { series: bucketByBoundaries(records, boundaries), grouping: kind }
+      : { series: bucketByTime(records, granularity), grouping: 'time' };
   }
 }
 

@@ -21,6 +21,7 @@ export interface ViewState {
   end: string;
   selection: string | null;
   baseline: Baseline;
+  grouping: Exclude<Baseline, 'auto'>;
   totals: Totals;
   tree: TreeNode[];
   series: TimeBucket[];
