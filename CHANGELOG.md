@@ -29,6 +29,8 @@ Phases 0 and 1: the churn data layer, the Churn Explorer, and the Trend view.
 - **Accent themes** for the churn colour, on top of the VS Code theme.
 - **Filter banner**: selecting a file or folder narrows the trend; clear it to
   restore the whole range.
+- **Workspace root row** in the tree that selects everything at once, nested
+  above the top-level files and folders.
 - Configuration page, six churn risk levels, and the "See git history in
   GitHub" context menu (carried from 0.0.x).
 
@@ -44,6 +46,10 @@ Phases 0 and 1: the churn data layer, the Churn Explorer, and the Trend view.
 
 - Path containment now compares path segments (`isWithin`) instead of raw
   string prefixes, so sibling folders with shared prefixes no longer match.
+- Conventional Commit types are matched case-insensitively and tolerate spaces
+  before the colon, so `test: ...` and `Test : ...` group correctly.
+- Expanding a folder in the tree no longer collapses the tree while the
+  filtered data reloads.
 
 ## [0.0.3] and earlier
 

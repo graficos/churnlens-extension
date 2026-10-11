@@ -55,7 +55,7 @@ This extension is inspired by the research on Code Churn as a predictor of defec
 
 ## Trend View
 
-Run the command `ChurnLens: Open Trend` (or the chart button in the Churn Explorer toolbar) to open the trend panel. It shares its state with the sidebar: selecting a file or folder in the tree filters the trend, and clearing the selection restores the whole range.
+Run the command `ChurnLens: Open Trend` (or the chart button in the Churn Explorer toolbar) to open the trend panel. It shares its state with the sidebar: selecting a file or folder in the tree filters the trend, and clearing the selection (or clicking the workspace root row) restores the whole range.
 
 The panel shows:
 
@@ -78,7 +78,6 @@ Run the command `ChurnLens: Open Configuration` to open the visual configuration
 Here you can:
 
 - Set the **range preset** or a **custom start and end date**.
-- Toggle hiding the root folder.
 - Edit the **commit labels** used for grouping.
 
 ### Extension Settings
@@ -87,7 +86,6 @@ Here you can:
 - `churnlens.rangeStart`: Custom range start date, `YYYY-MM-DD`.
 - `churnlens.rangeEnd`: Custom range end date, `YYYY-MM-DD`.
 - `churnlens.commitLabels`: Comma separated Conventional Commit labels (default: the Angular convention).
-- `churnlens.hideRoot`: Hide the root project folder from the Churn Explorer (default: `true`).
 - `churnlens.baseline`: How the trend groups churn into periods. `auto` uses semver tags, then merge commits, then time buckets (default: `auto`).
 
 ### Color Customization
