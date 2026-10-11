@@ -163,11 +163,11 @@ export function deletionRatio(point: TimeBucket): number {
   return point.deleted / point.added;
 }
 
-const COMMIT_TYPE = /^(\w+)(?:\([^)]*\))?!?:/;
+const COMMIT_TYPE = /^([a-z]+)(?:\s*\([^)]*\))?\s*!?:/i;
 
 export function commitType(subject: string): string {
   const match = COMMIT_TYPE.exec(subject.trim());
-  return match ? match[1] : 'other';
+  return match ? match[1].toLowerCase() : 'other';
 }
 
 export function groupByLabel(records: RawChange[], labels: string[]): LabelBucket[] {

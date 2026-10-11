@@ -26,9 +26,16 @@ function raw(
 describe('commitType', () => {
   it('parses conventional commit types', () => {
     expect(commitType('feat: init')).toBe('feat');
+    expect(commitType('test: add a regression test')).toBe('test');
     expect(commitType('fix(scope): bug')).toBe('fix');
     expect(commitType('feat(scope)!: breaking')).toBe('feat');
     expect(commitType('chore(deps): quiet')).toBe('chore');
+  });
+
+  it('tolerates case and spacing before the colon', () => {
+    expect(commitType('Test: add')).toBe('test');
+    expect(commitType('fix (scope): bug')).toBe('fix');
+    expect(commitType('docs : readme')).toBe('docs');
   });
 
   it('falls back to other for free-form subjects', () => {
