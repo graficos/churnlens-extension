@@ -37,7 +37,6 @@ export function webviewHtml(
   extensionUri: vscode.Uri,
   entry: string,
   body: string,
-  options: { codicons?: boolean } = {},
 ): string {
   const root = vscode.Uri.joinPath(extensionUri, 'dist', 'webview');
   const chunk = readManifest(extensionUri)[entry];
@@ -50,23 +49,6 @@ export function webviewHtml(
   const links = (chunk.css ?? []).map((css) =>
     webview.asWebviewUri(vscode.Uri.joinPath(root, css)).toString(),
   );
-
-  if (options.codicons) {
-    links.push(
-      webview
-        .asWebviewUri(
-          vscode.Uri.joinPath(
-            extensionUri,
-            'node_modules',
-            '@vscode/codicons',
-            'dist',
-            'codicon.css',
-          ),
-        )
-        .toString(),
-    );
-  }
-
   const styles = links.map((href) => `<link rel="stylesheet" href="${href}" />`).join('\n    ');
 
   const csp = [

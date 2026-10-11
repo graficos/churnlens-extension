@@ -37,7 +37,6 @@ export class TrendPanel {
       this._extensionUri,
       'src/webview/trend/main.ts',
       '<div id="app"></div>',
-      { codicons: true },
     );
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 

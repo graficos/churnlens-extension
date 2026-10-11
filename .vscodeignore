@@ -1,0 +1,15 @@
+# Dev-only sources and config; the shipped extension is dist/ + docs/ + public/.
+.vscode/**
+.opencode/**
+src/**
+**/*.ts
+**/*.map
+tsconfig.json
+vite.config.ts
+pnpm-lock.yaml
+pnpm-workspace.yaml
+TODO.md
+.gitignore
+
+# Keep the churn/delta explainer, drop the research paper.
+docs/icsm.1998.738486.md
