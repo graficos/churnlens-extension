@@ -21,13 +21,16 @@ const end = computed(() => state.value?.end ?? '');
 const tree = computed(() => state.value?.tree ?? []);
 const selection = computed(() => state.value?.selection ?? null);
 const loading = computed(
-  () => !state.value || state.value.status === 'loading' || state.value.status === 'idle',
+  () =>
+    !state.value ||
+    ((state.value.status === 'loading' || state.value.status === 'idle') &&
+      state.value.tree.length === 0),
 );
 const error = computed(() => state.value?.status === 'error');
 
 const skeleton = ['82%', '64%', '74%', '52%', '88%', '60%', '70%', '46%'];
 
-function toggleSelect(path: string) {
+function toggleSelect(path: string | null) {
   post({ type: 'select', path: selection.value === path ? null : path });
 }
 
