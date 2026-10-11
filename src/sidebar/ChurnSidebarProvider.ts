@@ -30,11 +30,9 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
       this._extensionUri,
       'src/webview/sidebar/main.ts',
       '<div id="app"></div>',
-      { codicons: true },
     );
 
     const storeSub = this.store.onDidChange((state) => this.post(state));
-    webviewView.onDidDispose(() => storeSub.dispose());
 
     let visible = false;
     webviewView.onDidChangeVisibility(() => {
@@ -53,6 +51,14 @@ export class ChurnSidebarProvider implements vscode.WebviewViewProvider {
 
     visible = webviewView.visible;
     this.store.setVisible(visible);
+
+    webviewView.onDidDispose(() => {
+      storeSub.dispose();
+      if (visible) {
+        visible = false;
+        this.store.setVisible(false);
+      }
+    });
   }
 
   private post(state: ViewState) {

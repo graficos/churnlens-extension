@@ -35,6 +35,7 @@ export class ChurnStore {
   private selection: string | null = null;
   private state: ViewState;
   private cache?: { key: string; head: string; data: ChurnData };
+  private requestId = 0;
 
   constructor(
     private readonly git: GitService,
@@ -92,6 +93,8 @@ export class ChurnStore {
     const hideRoot = ConfigManager.getHideRoot();
     const labels = ConfigManager.getCommitLabels();
     const baseline = ConfigManager.getBaseline();
+    // Drop the result of a superseded refresh (rapid clicks, debounced config).
+    const id = ++this.requestId;
     // Relative presets keep a stable key; a new commit (HEAD change) busts it.
     // ponytail: a commit ageing out of the window without a HEAD change stays
     // cached until the next commit or reload — fine for a read-only view.
@@ -113,9 +116,10 @@ export class ChurnStore {
         this.cache = { key, head: data.head || head, data };
       }
 
-      const scoped = selectRecords(data.records, this.rootPath, this.selection);
+      const scoped = selectRecords(data.records, this.selection);
       const granularity = autoGranularity(range.since, range.until);
       const series = await this.seriesFor(scoped, baseline, granularity);
+      if (id !== this.requestId) return;
 
       this.state = {
         status: 'ready',
@@ -135,6 +139,7 @@ export class ChurnStore {
       this._onDidChange.fire(this.state);
     } catch (e) {
       Logger.error('Error refreshing churn store', e);
+      if (id !== this.requestId) return;
       this.state = { ...this.state, status: 'error' };
       this._onDidChange.fire(this.state);
     }

@@ -59,11 +59,7 @@ export function autoGranularity(since: Date, until: Date): Granularity {
   return 'month';
 }
 
-export function selectRecords(
-  records: RawChange[],
-  rootPath: string,
-  selection: string | null,
-): RawChange[] {
+export function selectRecords(records: RawChange[], selection: string | null): RawChange[] {
   if (!selection) return records;
   return records.filter((record) => isWithin(selection, record.path));
 }
