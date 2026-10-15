@@ -94,8 +94,8 @@ Here you can:
 - `churnlens.rangeEnd`: Custom range end date, `YYYY-MM-DD`.
 - `churnlens.commitLabels`: Comma separated Conventional Commit labels (default: the Angular convention).
 - `churnlens.baseline`: How the trend groups churn into periods. `auto` uses semver tags, then merge commits, then time buckets (default: `auto`).
-- `churnlens.ignoredPaths`: Workspace-relative paths excluded from every churn calculation and the Churn Explorer tree (default: `[]`). Add entries by hovering a row in the Trend panel's **Highest churn** card and clicking the `x`, or edit the array directly. A directory entry ignores everything under it. Discarding generated or vendored outliers this way keeps them from skewing the charts.
-- `churnlens.theme`: daisyUI theme for the tree and trend views (default: `vscode`). `vscode` follows the editor theme; any bundled daisyUI theme (`dark`, `dracula`, `nord`, `synthwave`, …) restyles the panels and their corner radius. Data colours (added, removed, churn, delta) stay fixed so the charts read the same in every theme. The Theme picker in the trend header sets this too.
+- `churnlens.ignoredPaths`: Workspace-relative paths excluded from every churn calculation and the Churn Explorer tree (default: `[]`).
+- `churnlens.theme`: [daisyUI theme](https://daisyui.com/docs/themes/#list-of-themes) for the tree and trend views (default: `vscode`). `vscode` follows the editor theme.
 
 ### Color Customization
 
