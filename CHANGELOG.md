@@ -5,6 +5,24 @@ All notable changes to ChurnLens are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0]
+
+### Added
+
+- **Ignore paths**: hover a row in the trend's **Highest churn** card and click
+  the `x` to discard outliers. Ignored paths are excluded from every churn
+  calculation and the Churn Explorer tree, and are stored in the workspace
+  setting `churnlens.ignoredPaths`. A directory entry ignores everything under
+  it, and the ignore button is keyboard reachable without nesting buttons.
+- Keyboard navigation in the Churn Explorer tree: arrow keys move between rows
+  and expand or collapse folders. The row and the open-file button are separate
+  focus targets, and opening a file keeps focus in the tree.
+
+### Fixed
+
+- Stacked Added/Removed bars round both outer ends, and the bars and the
+  cumulative-churn area show a hover tooltip with the period value.
+
 ## [1.2.1]
 
 ### Changed
