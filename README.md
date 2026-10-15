@@ -132,3 +132,12 @@ code --extensionDevelopmentPath="$PWD"
 ```
 
 (You need to have `code` command in th `$PATH`.)
+
+## Publishing
+
+Create a PAT in `https://dev.azure.com/paulmelero/_usersSettings/tokens`, then:
+
+```bash
+pnpm exec vsce verify-pat paulmelero --pat '<PAT>'
+pnpm exec vsce publish --no-dependencies --pat '<PAT>'
+```
