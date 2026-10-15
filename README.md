@@ -48,7 +48,7 @@ This extension is inspired by the research on Code Churn as a predictor of defec
 
 ## Features
 
-![ChurnLens](https://github.com/graficos/churnlens-extension/blob/main/public/screenshot.png?raw=true)
+![ChurnLens](https://github.com/graficos/churnlens-extension/blob/main/public/screenshot.webp?raw=true)
 
 - **Churn Explorer**: A dedicated sidebar exploring the churn of your project with a tree view.
 - **Trend view**: A dedicated panel with charts — churn over time, added vs removed, cumulative churn, deletion ratio, and churn grouped by commit type.
