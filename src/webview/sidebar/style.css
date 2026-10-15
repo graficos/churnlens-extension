@@ -1,7 +1,7 @@
 @import '../app.css';
 
 body {
-  background: var(--vscode-sideBar-background, var(--surface));
+  background: var(--color-base-200);
 }
 
 .toolbar {
@@ -9,7 +9,7 @@ body {
   flex-direction: column;
   gap: 6px;
   padding: 6px 10px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--line);
   font-size: 0.8rem;
 }
 
@@ -21,9 +21,10 @@ body {
 
 .toolbar select,
 .toolbar input[type='date'] {
-  background: var(--vscode-input-background);
-  color: var(--vscode-input-foreground);
-  border: 1px solid var(--vscode-input-border, transparent);
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-field);
   padding: 2px 4px;
   outline: none;
   font: inherit;
@@ -50,14 +51,14 @@ body {
 .actions button {
   background: none;
   border: none;
-  color: var(--vscode-icon-foreground);
+  color: var(--color-base-content);
   cursor: pointer;
   padding: 2px 4px;
-  border-radius: 3px;
+  border-radius: var(--radius-selector);
 }
 
 .actions button:hover {
-  background-color: var(--vscode-toolbar-hoverBackground, var(--vscode-list-hoverBackground));
+  background-color: var(--color-base-300);
 }
 
 ul {
@@ -68,7 +69,7 @@ ul {
 
 .tree-list ul {
   padding-left: 10px;
-  border-left: 1px solid var(--vscode-tree-indentGuidesStroke, rgba(128, 128, 128, 0.2));
+  border-left: 1px solid var(--line);
 }
 
 .node {
@@ -83,12 +84,12 @@ ul {
 }
 
 .node:hover {
-  background-color: var(--vscode-list-hoverBackground);
+  background-color: var(--color-base-300);
 }
 
 .node.selected {
-  background-color: var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.2));
-  color: var(--vscode-list-activeSelectionForeground, inherit);
+  background-color: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  color: var(--color-base-content);
 }
 
 .node .codicon {
@@ -150,9 +151,9 @@ ul {
   width: 20px;
   height: 20px;
   border: none;
-  border-radius: 3px;
+  border-radius: var(--radius-selector);
   background: none;
-  color: var(--vscode-icon-foreground);
+  color: var(--color-base-content);
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.1s;
@@ -166,7 +167,7 @@ ul {
 
 .open-file:hover {
   opacity: 1;
-  background: var(--vscode-toolbar-hoverBackground, var(--vscode-list-hoverBackground));
+  background: var(--color-base-300);
 }
 
 .level-1 {
@@ -198,5 +199,5 @@ ul {
 
 .sk-row {
   height: 14px;
-  border-radius: 3px;
+  border-radius: var(--radius-selector);
 }

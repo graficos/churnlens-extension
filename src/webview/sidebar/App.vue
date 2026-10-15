@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, provide } from 'vue';
 import { useStore } from '../composables/useStore';
+import { useTheme } from '../composables/useTheme';
 import TreeNode from './TreeNode.vue';
 import type { RangePreset } from '../../protocol';
 
 const { state, post } = useStore();
+useTheme(state);
 
 const presets: { value: RangePreset; label: string }[] = [
   { value: '2d', label: '2 days' },

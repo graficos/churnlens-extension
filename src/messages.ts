@@ -30,6 +30,12 @@ export async function handleWebMessage(
         .getConfiguration('churnlens')
         .update('baseline', message.value, vscode.ConfigurationTarget.Global);
       break;
+    case 'setTheme':
+      host.store.setTheme(message.value);
+      await vscode.workspace
+        .getConfiguration('churnlens')
+        .update('theme', message.value, vscode.ConfigurationTarget.Global);
+      break;
     case 'select':
       host.store.setSelection(message.path);
       break;

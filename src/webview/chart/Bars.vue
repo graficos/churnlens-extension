@@ -198,11 +198,12 @@ const showRotatedLabels = computed(() => props.labels.length > 10);
       <rect
         v-for="bar in bars"
         :key="bar.key"
+        class="chart-bar"
+        :class="{ 'chart-bar-flat': bar.rx === 0 }"
         :x="bar.x"
         :y="bar.y"
         :width="bar.w"
         :height="bar.h"
-        :rx="bar.rx"
         :fill="bar.color"
         :opacity="bar.opacity"
       >

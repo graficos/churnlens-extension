@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import { ConfigManager } from './config';
 import { GitService } from './git';
 import { ChurnSidebarProvider } from './sidebar/ChurnSidebarProvider';
 import { ChurnStore } from './store';
@@ -104,6 +105,10 @@ function activateInternal(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
+      // A theme change never touches churn data, so skip the reload.
+      if (e.affectsConfiguration('churnlens.theme')) {
+        store.setTheme(ConfigManager.getTheme());
+      }
       if (
         e.affectsConfiguration('churnlens.rangePreset') ||
         e.affectsConfiguration('churnlens.rangeStart') ||

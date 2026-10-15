@@ -1,23 +1,66 @@
 @import '@vscode/codicons/dist/codicon.css';
 @import 'tailwindcss';
-@plugin 'daisyui';
 
-:root {
+/* Enable every daisyUI theme so the theme switcher has a full palette. */
+@plugin 'daisyui' {
+  themes: all;
+}
+
+/* The default theme. Maps daisyUI tokens onto VS Code variables so the panel
+   tracks the editor theme until the user picks another one. */
+@plugin 'daisyui/theme' {
+  name: 'vscode';
+  default: true;
   color-scheme: light dark;
 
-  --surface: var(--vscode-editor-background);
-  --surface-2: var(--vscode-sideBar-background, var(--vscode-editorWidget-background));
-  --surface-raise: var(--vscode-editorWidget-background, var(--vscode-editor-background));
-  --border: var(--vscode-panel-border, rgba(128, 128, 128, 0.24));
-  --border-strong: var(
-    --vscode-widget-border,
-    var(--vscode-panel-border, rgba(128, 128, 128, 0.4))
+  --color-base-100: var(--vscode-editor-background);
+  --color-base-200: var(--vscode-sideBar-background, var(--vscode-editorWidget-background));
+  --color-base-300: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  --color-base-content: var(--vscode-foreground);
+  --color-primary: var(--vscode-textLink-foreground, #3794ff);
+  --color-primary-content: var(--vscode-editor-background);
+  --color-secondary: var(
+    --vscode-textLink-activeForeground,
+    var(--vscode-textLink-foreground, #3794ff)
   );
-  --ink: var(--vscode-foreground);
-  --ink-muted: color-mix(in srgb, var(--vscode-foreground) 64%, transparent);
-  --ink-faint: color-mix(in srgb, var(--vscode-foreground) 40%, transparent);
-  --focus: var(--vscode-focusBorder, #007fd4);
+  --color-secondary-content: var(--vscode-editor-background);
+  --color-accent: var(--vscode-charts-purple, #bc8cff);
+  --color-accent-content: var(--vscode-editor-background);
+  --color-neutral: var(
+    --vscode-button-secondaryBackground,
+    var(--vscode-button-background, #0e639c)
+  );
+  --color-neutral-content: var(--vscode-button-foreground, #ffffff);
+  --color-info: var(--vscode-charts-blue, #58a6ff);
+  --color-info-content: var(--vscode-editor-background);
+  --color-success: var(--vscode-charts-green, #3fb950);
+  --color-success-content: var(--vscode-editor-background);
+  --color-warning: var(--vscode-charts-orange, #d29922);
+  --color-warning-content: var(--vscode-editor-background);
+  --color-error: var(--vscode-charts-red, #f85149);
+  --color-error-content: var(--vscode-editor-background);
 
+  --radius-selector: 0.25rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.625rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+:root {
+  /* Chrome follows the active daisyUI theme. */
+  --surface: var(--color-base-100);
+  --line: color-mix(in srgb, var(--color-base-content) 16%, transparent);
+  --line-strong: color-mix(in srgb, var(--color-base-content) 30%, transparent);
+  --ink: var(--color-base-content);
+  --ink-muted: color-mix(in srgb, var(--color-base-content) 64%, transparent);
+  --ink-faint: color-mix(in srgb, var(--color-base-content) 40%, transparent);
+  --focus: var(--color-primary);
+
+  /* Data-viz colours stay fixed so the charts read the same in every theme. */
   --added: var(--vscode-charts-green, #3fb950);
   --removed: var(--vscode-charts-red, #f85149);
   --churn: var(--vscode-charts-orange, #d29922);
@@ -25,31 +68,8 @@
 
   --mono: var(--vscode-editor-font-family, ui-monospace, SFMono-Regular, Menlo, monospace);
 
-  /* aliases kept for older selectors */
-  --color-primary: var(--vscode-textLink-foreground, #3794ff);
-  --color-surface-100: var(--surface);
-  --color-surface-200: var(--surface-2);
-  --color-surface-300: var(--border);
-  --color-surface-content: var(--ink);
-
-  /* DaisyUI 5 theme tokens, aligned to the VS Code theme so components
-     (skeleton, buttons, inputs) match light/dark/high-contrast. */
-  --color-base-100: var(--surface);
-  --color-base-200: color-mix(in srgb, var(--ink) 8%, var(--surface));
-  --color-base-300: color-mix(in srgb, var(--ink) 14%, var(--surface));
-  --color-base-content: var(--ink);
-  --color-primary-content: var(--surface);
-}
-
-/* The signature churn hue. Amber is the default; the switcher picks another. */
-:root[data-accent='blue'] {
-  --churn: var(--vscode-charts-blue, #58a6ff);
-}
-:root[data-accent='purple'] {
-  --churn: var(--vscode-charts-purple, #bc8cff);
-}
-:root[data-accent='teal'] {
-  --churn: #39c5cf;
+  /* Corner radius follows the theme. Bars stay modest so thin ones aren't pills. */
+  --chart-radius: min(var(--radius-selector), 0.5rem);
 }
 
 html,
@@ -78,7 +98,7 @@ a {
 :focus-visible {
   outline: 1px solid var(--focus);
   outline-offset: 1px;
-  border-radius: 2px;
+  border-radius: var(--radius-selector);
 }
 
 .figure {
@@ -102,6 +122,14 @@ a {
   fill: var(--ink);
   opacity: 0.55;
   font-size: 10px;
+}
+
+.chart-bar {
+  rx: var(--chart-radius);
+}
+
+.chart-bar-flat {
+  rx: 0;
 }
 
 .legend {
@@ -131,7 +159,7 @@ a {
 .legend-swatch {
   width: 10px;
   height: 10px;
-  border-radius: 2px;
+  border-radius: var(--radius-selector);
   display: inline-block;
 }
 

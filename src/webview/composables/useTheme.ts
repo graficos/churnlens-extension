@@ -1,25 +1,55 @@
-import { ref, watch } from 'vue';
-import { vscode } from './vscode';
+import { watch, type Ref } from 'vue';
+import type { ViewState } from '../../protocol';
 
-export const ACCENTS = ['amber', 'blue', 'purple', 'teal'] as const;
-export type Accent = (typeof ACCENTS)[number];
+export const THEMES = [
+  'vscode',
+  'light',
+  'dark',
+  'cupcake',
+  'bumblebee',
+  'emerald',
+  'corporate',
+  'synthwave',
+  'retro',
+  'cyberpunk',
+  'valentine',
+  'halloween',
+  'garden',
+  'forest',
+  'aqua',
+  'lofi',
+  'pastel',
+  'fantasy',
+  'wireframe',
+  'black',
+  'luxury',
+  'dracula',
+  'cmyk',
+  'autumn',
+  'business',
+  'acid',
+  'lemonade',
+  'night',
+  'coffee',
+  'winter',
+  'dim',
+  'nord',
+  'sunset',
+  'caramellatte',
+  'abyss',
+  'silk',
+] as const;
 
-interface WebviewState {
-  accent?: Accent;
-}
+export type Theme = (typeof THEMES)[number];
 
-const initial = (vscode.getState() as WebviewState | undefined)?.accent ?? 'amber';
+export function useTheme(state: Ref<ViewState | null>) {
+  watch(
+    state,
+    (value) => {
+      document.documentElement.dataset.theme = value?.theme || 'vscode';
+    },
+    { immediate: true },
+  );
 
-export function useTheme() {
-  const accent = ref<Accent>(initial);
-
-  const apply = (value: Accent) => {
-    document.documentElement.dataset.accent = value;
-    vscode.setState({ ...(vscode.getState() as object), accent: value });
-  };
-
-  apply(accent.value);
-  watch(accent, apply);
-
-  return { accent, accents: ACCENTS };
+  return { themes: THEMES };
 }

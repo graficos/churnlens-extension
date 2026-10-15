@@ -7,10 +7,13 @@ import Bars from '../chart/Bars.vue';
 import ChartCard from './ChartCard.vue';
 import LabelPanel from './LabelPanel.vue';
 import RiskPanel from './RiskPanel.vue';
+import ThemeSwitcher from './ThemeSwitcher.vue';
 import type { Baseline, RangePreset } from '../../protocol';
 
 const { state, post } = useStore();
-const { accent, accents } = useTheme();
+useTheme(state);
+
+const theme = computed(() => state.value?.theme ?? 'vscode');
 
 const presets: { value: RangePreset; label: string }[] = [
   { value: '2d', label: '2 days' },
@@ -172,13 +175,7 @@ function onRiskOpen(path: string) {
           <span class="field-hint">Churn = added + removed. Delta = added − removed.</span>
         </div>
 
-        <label class="field">
-          <span class="field-label">Accent</span>
-          <select v-model="accent">
-            <option v-for="option in accents" :key="option" :value="option">{{ option }}</option>
-          </select>
-          <span class="field-hint">Colour of the churn marks.</span>
-        </label>
+        <ThemeSwitcher :theme="theme" @select="(value) => post({ type: 'setTheme', value })" />
       </div>
     </header>
 

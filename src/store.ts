@@ -49,6 +49,7 @@ export class ChurnStore {
       end: '',
       selection: null,
       baseline: 'auto',
+      theme: ConfigManager.getTheme(),
       grouping: 'time',
       totals: { added: 0, deleted: 0, churn: 0, delta: 0, commits: 0 },
       tree: [],
@@ -77,6 +78,12 @@ export class ChurnStore {
     this._onDidChange.fire(this.state);
   }
 
+  setTheme(theme: string) {
+    if (theme === this.state.theme) return;
+    this.state = { ...this.state, theme };
+    this._onDidChange.fire(this.state);
+  }
+
   setSelection(path: string | null) {
     if (path === this.selection) {
       return;
@@ -93,6 +100,7 @@ export class ChurnStore {
     const range = ConfigManager.getRange();
     const labels = ConfigManager.getCommitLabels();
     const baseline = ConfigManager.getBaseline();
+    const theme = ConfigManager.getTheme();
     // Drop the result of a superseded refresh (rapid clicks, debounced config).
     const id = ++this.requestId;
     // Relative presets keep a stable key; a new commit (HEAD change) busts it.
@@ -129,6 +137,7 @@ export class ChurnStore {
         end: toDateInput(range.until),
         selection: this.selection,
         baseline,
+        theme,
         grouping,
         totals: totalsOf(scoped),
         tree: buildTree(data.files, this.rootPath),

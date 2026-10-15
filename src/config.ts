@@ -67,4 +67,8 @@ export class ConfigManager {
   static getBaseline(): Baseline {
     return vscode.workspace.getConfiguration('churnlens').get<Baseline>('baseline', 'auto');
   }
+
+  static getTheme(): string {
+    return vscode.workspace.getConfiguration('churnlens').get<string>('theme', 'vscode');
+  }
 }

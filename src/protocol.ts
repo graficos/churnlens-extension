@@ -21,6 +21,7 @@ export interface ViewState {
   end: string;
   selection: string | null;
   baseline: Baseline;
+  theme: string;
   grouping: Exclude<Baseline, 'auto'>;
   totals: Totals;
   tree: TreeNode[];
@@ -36,6 +37,7 @@ export type WebToExt =
   | { type: 'setRange'; preset: RangePreset; start?: string; end?: string }
   | { type: 'setMetric'; value: Metric }
   | { type: 'setBaseline'; value: Baseline }
+  | { type: 'setTheme'; value: string }
   | { type: 'select'; path: string | null }
   | { type: 'openFile'; path: string }
   | { type: 'openInfo' }

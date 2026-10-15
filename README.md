@@ -73,7 +73,7 @@ The panel shows:
 - **Churn by commit type** — grouped by Conventional Commit type.
 - **Highest churn** — the top paths by churn, click a bar to open the file.
 
-Charts use hand-rolled SVG and follow the VS Code theme, so light, dark and high-contrast work without extra setup. A few accent colours are available in the toolbar. Periods are grouped by the configured baseline: semver tags when present, otherwise merge commits, otherwise day/week/month buckets.
+Charts use hand-rolled SVG. Both views follow the VS Code theme by default; the Theme picker in the trend header restyles the whole extension (tree and charts) with any bundled daisyUI theme. Data colours (added, removed, churn, delta) stay fixed so the charts read the same in every theme. Periods are grouped by the configured baseline: semver tags when present, otherwise merge commits, otherwise day/week/month buckets.
 
 ## Configuration
 

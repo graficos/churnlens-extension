@@ -18,7 +18,7 @@
   align-items: flex-end;
   justify-content: space-between;
   padding-bottom: 16px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--line);
 }
 
 .head-title h1 {
@@ -59,9 +59,10 @@
 }
 
 .field select {
-  background: var(--vscode-dropdown-background, var(--vscode-input-background));
-  color: var(--vscode-dropdown-foreground, var(--vscode-input-foreground));
-  border: 1px solid var(--vscode-dropdown-border, var(--vscode-input-border, var(--border)));
+  background: var(--color-base-200);
+  color: var(--color-base-content);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-field);
   padding: 3px 6px;
   font: inherit;
 }
@@ -90,8 +91,8 @@
 
 .segmented {
   display: inline-flex;
-  border: 1px solid var(--border-strong);
-  border-radius: 5px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-field);
   overflow: hidden;
   width: fit-content;
 }
@@ -107,7 +108,7 @@
 }
 
 .segmented button + button {
-  border-left: 1px solid var(--border-strong);
+  border-left: 1px solid var(--line-strong);
 }
 
 .segmented button.on {
@@ -163,13 +164,13 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--line-strong);
   background: var(--surface);
   color: inherit;
   font: inherit;
   font-size: 12px;
   padding: 3px 9px;
-  border-radius: 999px;
+  border-radius: var(--radius-field);
   cursor: pointer;
 }
 
@@ -185,8 +186,8 @@
 }
 
 .stat {
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-box);
   padding: 10px 12px;
 }
 
@@ -247,8 +248,8 @@
 }
 
 .card {
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-box);
   padding: 14px 16px;
   min-width: 0;
 }
@@ -302,16 +303,16 @@
   font: inherit;
   text-align: left;
   padding: 4px 6px;
-  border-radius: 6px;
+  border-radius: var(--radius-selector);
   cursor: pointer;
 }
 
 .rank-row:hover {
-  background: var(--vscode-list-hoverBackground);
+  background: var(--color-base-200);
 }
 
 .rank-row.selected {
-  background: var(--vscode-list-activeSelectionBackground, rgba(128, 128, 128, 0.2));
+  background: color-mix(in srgb, var(--color-primary) 22%, transparent);
 }
 
 .rank-num {
@@ -336,7 +337,7 @@
 .rank-track {
   display: block;
   height: 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-selector);
   background: color-mix(in srgb, var(--ink) 10%, transparent);
   overflow: hidden;
 }
@@ -345,7 +346,7 @@
   display: block;
   height: 100%;
   background: var(--churn);
-  border-radius: 3px;
+  border-radius: var(--radius-selector);
 }
 
 .rank-value {
@@ -381,7 +382,7 @@
 .bar-track {
   display: block;
   height: 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-selector);
   background: color-mix(in srgb, var(--ink) 8%, transparent);
   overflow: hidden;
 }
@@ -389,7 +390,7 @@
 .bar-fill {
   display: block;
   height: 100%;
-  border-radius: 4px;
+  border-radius: var(--radius-selector);
   background: var(--ink-faint);
 }
 
@@ -403,19 +404,19 @@
 
 /* ---- skeleton ---- */
 .sk-card {
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-box);
   padding: 14px 16px;
 }
 
 .sk-line {
   height: 12px;
-  border-radius: 3px;
+  border-radius: var(--radius-selector);
 }
 
 .sk-chart {
   height: 200px;
-  border-radius: 6px;
+  border-radius: var(--radius-box);
 }
 
 .stack {

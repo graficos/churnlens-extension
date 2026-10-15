@@ -79,9 +79,6 @@ A dedicated trend panel with charts, state shared with the tree.
       `git blame` on the parent revision to age the deleted lines. Recent
       deletions are rework; old deletions are refactoring. This answers whether
       rising churn is rework or cleanup.
-- [ ] **2.3 Theme system.** Evaluate a component-theme system for many ready
-      themes. Weigh the cost: it pulls a CSS framework and a build step. Only
-      adopt if the win justifies the weight.
 
 ---
 
@@ -93,7 +90,8 @@ Applies across the tree view, charts, panels and docs.
   removed = red.
 - **Risk intensity:** a sequential single-hue ramp (red). The lightest step must
   keep enough contrast on the light theme.
-- **Theme-aware:** derive from `--vscode-*` variables, then override with accent
-  tokens. Light, dark and high-contrast all work without extra work.
+- **Theme-aware:** chrome derives from the active daisyUI theme (`vscode` by
+  default). Data colours stay fixed on top of it. Light, dark and
+  high-contrast all work without extra work.
 - **Style:** rounded bar corners, gradient area fills, subtle grid lines, quiet
   axes. Keep the reference aesthetic in mind when implementing.
