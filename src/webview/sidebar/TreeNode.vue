@@ -10,7 +10,7 @@ const props = defineProps<{
 
 const actions = inject<{
   openTrend: (path: string | null) => void;
-  openFile: (path: string) => void;
+  openFile: (path: string, preserveFocus?: boolean) => void;
 }>('actions')!;
 const open = ref(props.node.isRoot);
 
@@ -48,6 +48,56 @@ function onRow() {
     actions.openTrend(props.node.path);
   }
 }
+
+function onOpenFile(event: MouseEvent) {
+  actions.openFile(props.node.path, event.detail === 0);
+}
+
+function rows(): HTMLElement[] {
+  return Array.from(document.querySelectorAll<HTMLElement>('.node-main'));
+}
+
+function moveFocus(el: HTMLElement, delta: number) {
+  const list = rows();
+  list[list.indexOf(el) + delta]?.focus();
+}
+
+function focusParent(el: HTMLElement) {
+  const level = Number(el.dataset.level);
+  const list = rows();
+  for (let i = list.indexOf(el) - 1; i >= 0; i--) {
+    if (Number(list[i].dataset.level) < level) {
+      list[i].focus();
+      return;
+    }
+  }
+}
+
+function onKeydown(event: KeyboardEvent) {
+  const el = (event.currentTarget as HTMLElement).querySelector<HTMLElement>('.node-main');
+  if (!el) return;
+  switch (event.key) {
+    case 'ArrowDown':
+      event.preventDefault();
+      moveFocus(el, 1);
+      break;
+    case 'ArrowUp':
+      event.preventDefault();
+      moveFocus(el, -1);
+      break;
+    case 'ArrowRight':
+      event.preventDefault();
+      if (!props.node.isDir) break;
+      if (!open.value) open.value = true;
+      else moveFocus(el, 1);
+      break;
+    case 'ArrowLeft':
+      event.preventDefault();
+      if (props.node.isDir && open.value) open.value = false;
+      else focusParent(el);
+      break;
+  }
+}
 </script>
 
 <template>
@@ -57,19 +107,21 @@ function onRow() {
       :class="['level-' + node.level, { selected, root: node.isRoot }]"
       :data-vscode-context="context"
       :title="node.path"
-      @click="onRow"
+      @keydown="onKeydown"
     >
-      <span class="arrow" :class="node.isDir ? { open } : 'empty'">&#9654;</span>
-      <span class="codicon" :class="iconClass"></span>
-      <span class="name">{{ node.name }}</span>
-      <span class="count">{{ value }}</span>
+      <button class="node-main" :data-level="node.level" @click="onRow">
+        <span class="arrow" :class="node.isDir ? { open } : 'empty'">&#9654;</span>
+        <span class="codicon" :class="iconClass"></span>
+        <span class="name">{{ node.name }}</span>
+        <span class="count">{{ value }}</span>
+      </button>
       <span class="row-end">
         <button
           v-if="!node.isDir"
           class="open-file"
           title="Open file in the editor"
           aria-label="Open file in the editor"
-          @click.stop="actions.openFile(node.path)"
+          @click="onOpenFile"
         >
           <span class="codicon codicon-go-to-file"></span>
         </button>

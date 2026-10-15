@@ -40,7 +40,9 @@ export async function handleWebMessage(
       host.store.setSelection(message.path);
       break;
     case 'openFile':
-      await vscode.window.showTextDocument(vscode.Uri.file(message.path));
+      await vscode.window.showTextDocument(vscode.Uri.file(message.path), {
+        preserveFocus: message.preserveFocus,
+      });
       break;
     case 'openInfo':
       await vscode.window.showTextDocument(

@@ -37,7 +37,8 @@ provide('actions', {
     post({ type: 'select', path });
     post({ type: 'openTrend' });
   },
-  openFile: (path: string) => post({ type: 'openFile', path }),
+  openFile: (path: string, preserveFocus = false) =>
+    post({ type: 'openFile', path, preserveFocus }),
 });
 
 function onPreset(event: Event) {
