@@ -7,8 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0]
 
-Phases 0 and 1: the churn data layer, the Churn Explorer, and the Trend view.
-
 ### Added
 
 - **Trend view**: a dedicated panel with hand-rolled SVG charts.
