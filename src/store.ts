@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { Metric } from './churn';
 import { Baseline, ConfigManager } from './config';
 import { ChurnData, GitService } from './git';
@@ -84,6 +85,16 @@ export class ChurnStore {
     this._onDidChange.fire(this.state);
   }
 
+  setIgnored(absPath: string, ignored: boolean) {
+    const rel = path.relative(this.rootPath, absPath).split(path.sep).join('/');
+    const config = vscode.workspace.getConfiguration('churnlens');
+    const current = config.get<string[]>('ignoredPaths', []);
+    const next = ignored
+      ? [...new Set([...current, rel])]
+      : current.filter((entry) => entry !== rel);
+    void config.update('ignoredPaths', next, vscode.ConfigurationTarget.Workspace);
+  }
+
   setSelection(path: string | null) {
     if (path === this.selection) {
       return;
@@ -101,15 +112,16 @@ export class ChurnStore {
     const labels = ConfigManager.getCommitLabels();
     const baseline = ConfigManager.getBaseline();
     const theme = ConfigManager.getTheme();
+    const ignored = ConfigManager.getIgnoredPaths();
     // Drop the result of a superseded refresh (rapid clicks, debounced config).
     const id = ++this.requestId;
     // Relative presets keep a stable key; a new commit (HEAD change) busts it.
     // ponytail: a commit ageing out of the window without a HEAD change stays
     // cached until the next commit or reload — fine for a read-only view.
     const key =
-      range.preset === 'custom'
+      (range.preset === 'custom'
         ? `custom:${toDateInput(range.since)}:${toDateInput(range.until)}`
-        : range.preset;
+        : range.preset) + `:${ignored.join('|')}`;
 
     this.state = { ...this.state, status: 'loading' };
     this._onDidChange.fire(this.state);
@@ -120,7 +132,7 @@ export class ChurnStore {
       if (this.cache && this.cache.key === key && this.cache.head === head) {
         data = this.cache.data;
       } else {
-        data = await this.git.getChurnData(range);
+        data = await this.git.getChurnData(range, ignored);
         this.cache = { key, head: data.head || head, data };
       }
 

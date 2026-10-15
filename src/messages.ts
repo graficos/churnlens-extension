@@ -39,6 +39,9 @@ export async function handleWebMessage(
     case 'select':
       host.store.setSelection(message.path);
       break;
+    case 'ignorePath':
+      host.store.setIgnored(message.path, message.ignored);
+      break;
     case 'openFile':
       await vscode.window.showTextDocument(vscode.Uri.file(message.path), {
         preserveFocus: message.preserveFocus,

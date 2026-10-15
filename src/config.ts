@@ -71,4 +71,8 @@ export class ConfigManager {
   static getTheme(): string {
     return vscode.workspace.getConfiguration('churnlens').get<string>('theme', 'vscode');
   }
+
+  static getIgnoredPaths(): string[] {
+    return vscode.workspace.getConfiguration('churnlens').get<string[]>('ignoredPaths', []);
+  }
 }

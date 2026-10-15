@@ -102,6 +102,10 @@ function onRiskOpen(path: string) {
   post({ type: 'select', path: selection.value === path ? null : path });
   post({ type: 'openFile', path });
 }
+
+function onRiskIgnore(path: string) {
+  post({ type: 'ignorePath', path, ignored: true });
+}
 </script>
 
 <template>
@@ -286,7 +290,13 @@ function onRiskOpen(path: string) {
         </div>
 
         <div class="col">
-          <RiskPanel :risk="risk" :selection="selection" :limit="3" @open="onRiskOpen" />
+          <RiskPanel
+            :risk="risk"
+            :selection="selection"
+            :limit="3"
+            @open="onRiskOpen"
+            @ignore="onRiskIgnore"
+          />
           <LabelPanel v-if="labelsByType.length" :labels="labelsByType" />
         </div>
       </div>

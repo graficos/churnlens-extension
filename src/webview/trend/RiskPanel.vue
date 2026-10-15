@@ -6,7 +6,7 @@ const props = withDefaults(
   defineProps<{ risk: RiskEntry[]; selection: string | null; limit?: number }>(),
   { limit: 3 },
 );
-const emit = defineEmits<{ open: [path: string] }>();
+const emit = defineEmits<{ open: [path: string]; ignore: [path: string] }>();
 
 const top = computed(() => props.risk.slice(0, props.limit));
 const max = computed(() => Math.max(1, ...top.value.map((entry) => entry.churn)));
@@ -21,7 +21,7 @@ function width(entry: RiskEntry) {
     <h2>Highest churn</h2>
     <p>The three riskiest paths by total movement. Click one to open the file.</p>
     <ol class="rank">
-      <li v-for="(entry, index) in top" :key="entry.path">
+      <li v-for="(entry, index) in top" :key="entry.path" class="rank-item">
         <button
           class="rank-row"
           :class="{ selected: entry.path === selection }"
@@ -36,6 +36,14 @@ function width(entry: RiskEntry) {
             </span>
           </span>
           <span class="rank-value figure">{{ entry.churn.toLocaleString() }}</span>
+        </button>
+        <button
+          class="rank-ignore"
+          :title="`Ignore ${entry.path}`"
+          :aria-label="`Ignore ${entry.name} in churn calculations`"
+          @click="emit('ignore', entry.path)"
+        >
+          <span class="codicon codicon-close"></span>
         </button>
       </li>
     </ol>

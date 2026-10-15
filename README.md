@@ -71,7 +71,7 @@ The panel shows:
 - **Cumulative churn** — the running total across the range.
 - **Deletion ratio** — removed divided by added, the rework signal.
 - **Churn by commit type** — grouped by Conventional Commit type.
-- **Highest churn** — the top paths by churn, click a bar to open the file.
+- **Highest churn** — the top paths by churn. Click a bar to open the file, or hover a row and click the `x` to ignore that path (see `churnlens.ignoredPaths`).
 
 Charts use hand-rolled SVG. Both views follow the VS Code theme by default; the Theme picker in the trend header restyles the whole extension (tree and charts) with any bundled daisyUI theme. Data colours (added, removed, churn, delta) stay fixed so the charts read the same in every theme. Periods are grouped by the configured baseline: semver tags when present, otherwise merge commits, otherwise day/week/month buckets.
 
@@ -94,6 +94,8 @@ Here you can:
 - `churnlens.rangeEnd`: Custom range end date, `YYYY-MM-DD`.
 - `churnlens.commitLabels`: Comma separated Conventional Commit labels (default: the Angular convention).
 - `churnlens.baseline`: How the trend groups churn into periods. `auto` uses semver tags, then merge commits, then time buckets (default: `auto`).
+- `churnlens.ignoredPaths`: Workspace-relative paths excluded from every churn calculation and the Churn Explorer tree (default: `[]`). Add entries by hovering a row in the Trend panel's **Highest churn** card and clicking the `x`, or edit the array directly. A directory entry ignores everything under it. Discarding generated or vendored outliers this way keeps them from skewing the charts.
+- `churnlens.theme`: daisyUI theme for the tree and trend views (default: `vscode`). `vscode` follows the editor theme; any bundled daisyUI theme (`dark`, `dracula`, `nord`, `synthwave`, …) restyles the panels and their corner radius. Data colours (added, removed, churn, delta) stay fixed so the charts read the same in every theme. The Theme picker in the trend header sets this too.
 
 ### Color Customization
 
@@ -134,8 +136,8 @@ While the UI customization has been streamlined, you can still customize the 6 c
 
 Run in the Terminal:
 
-```
-code --extensionDevelopmentPath="$PWD"
+```bash
+pnpm build && code --extensionDevelopmentPath="$PWD"
 ```
 
 (You need to have `code` command in th `$PATH`.)

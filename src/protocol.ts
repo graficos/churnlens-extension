@@ -39,6 +39,7 @@ export type WebToExt =
   | { type: 'setBaseline'; value: Baseline }
   | { type: 'setTheme'; value: string }
   | { type: 'select'; path: string | null }
+  | { type: 'ignorePath'; path: string; ignored: boolean }
   | { type: 'openFile'; path: string; preserveFocus?: boolean }
   | { type: 'openInfo' }
   | { type: 'openSettings' }

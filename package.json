@@ -197,6 +197,14 @@
           "default": "auto",
           "description": "How the trend groups churn into periods."
         },
+        "churnlens.ignoredPaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Workspace-relative paths excluded from every churn calculation and the file tree. Use the `x` in the Highest churn card to discard outliers."
+        },
         "churnlens.theme": {
           "type": "string",
           "enum": [

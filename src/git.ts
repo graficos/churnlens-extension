@@ -1,7 +1,7 @@
 import simpleGit, { SimpleGit } from 'simple-git';
 import * as path from 'path';
 import { Logger } from './logger';
-import { isWithin } from './paths';
+import { isWithin, matchesIgnored } from './paths';
 import { DateRange } from './config';
 import { FileChurn, RawChange, parseNumstat, toFileChurnMap } from './parse';
 import { Boundary } from './series';
@@ -58,7 +58,7 @@ export class GitService {
     }
   }
 
-  async getChurnData(range: DateRange): Promise<ChurnData> {
+  async getChurnData(range: DateRange, ignored: string[] = []): Promise<ChurnData> {
     const repoRoot = await this.getRepoRoot();
     const head = await this.getHead();
     const since = formatGitDate(range.since);
@@ -76,10 +76,13 @@ export class GitService {
         `--pretty=format:${HEADER}%H${SEP}%an${SEP}%cI${SEP}%s`,
       ]);
 
+      const toGitPath = (absPath: string) =>
+        path.relative(this.rootPath, absPath).split(path.sep).join('/');
       const parsed = parseNumstat(raw);
       const resolved = parsed
         .map((record) => ({ ...record, path: path.resolve(repoRoot, record.path) }))
-        .filter((record) => isWithin(this.rootPath, record.path));
+        .filter((record) => isWithin(this.rootPath, record.path))
+        .filter((record) => !matchesIgnored(toGitPath(record.path), ignored));
       const records = await this.excludeIgnored(resolved);
 
       const files = toFileChurnMap(records, (filePath) => filePath);

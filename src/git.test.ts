@@ -11,6 +11,7 @@ vi.mock('vscode', () => ({
 }));
 
 import { GitService } from './git';
+import { matchesIgnored } from './paths';
 
 const NUMSTAT =
   '@@@c1\u001fana\u001f2026-10-10T00:00:00Z\u001ffix: x\n' +
@@ -64,5 +65,31 @@ describe('GitService ignores', () => {
       '/repo/src/a.ts',
       '/repo/dist/bundle.js',
     ]);
+  });
+
+  it('drops records matched by the user ignore list', async () => {
+    raw.mockImplementation(
+      rawFor(async () => {
+        throw new Error('exit 1');
+      }),
+    );
+
+    const { records, files } = await new GitService('/repo').getChurnData(
+      { since: new Date('2026-10-01'), until: new Date('2026-10-31'), preset: '30d' },
+      ['dist/bundle.js'],
+    );
+
+    expect(records.map((record) => record.path)).toEqual(['/repo/src/a.ts']);
+    expect([...files.keys()]).toEqual(['/repo/src/a.ts']);
+  });
+});
+
+describe('matchesIgnored', () => {
+  it('matches exact files and anything under an ignored directory', () => {
+    expect(matchesIgnored('src/a.ts', ['src/a.ts'])).toBe(true);
+    expect(matchesIgnored('dist/bundle.js', ['dist'])).toBe(true);
+    expect(matchesIgnored('src/a.ts', ['dist'])).toBe(false);
+    expect(matchesIgnored('src/dist/a.ts', ['dist'])).toBe(false);
+    expect(matchesIgnored('src/a.ts', [''])).toBe(false);
   });
 });
