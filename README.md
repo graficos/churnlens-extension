@@ -7,6 +7,12 @@
   </a>
 
   <h3 align="center">ChurnLens</h3>
+
+  <p align="center">
+    <a href="https://marketplace.visualstudio.com/items?itemName=paulmelero.churnlens">
+      <img src="https://img.shields.io/badge/VS%20Code%20Marketplace-Install-007ACC?logo=visualstudiocode&logoColor=white" alt="Install from the VS Code Marketplace">
+    </a>
+  </p>
 </div>
 
 **ChurnLens** helps you identify "hotspots" in your codebase by visualizing Code Churn directly in the IDE. Files that change frequently are highlighted with different colors in a custom "Churn Explorer" sidebar, allowing you to spot potential areas of instability, high churn or high maintenance at a glance. A companion **Trend** panel charts that churn over time.
