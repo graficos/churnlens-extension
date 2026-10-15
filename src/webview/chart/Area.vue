@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, useId } from 'vue';
+import { computed, ref, useId } from 'vue';
 import { extent, linear, niceTicks } from './scale';
 
 const props = withDefaults(
@@ -50,59 +50,105 @@ const areaPath = computed(() => {
 
 const gradientId = `area-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 const showRotatedLabels = computed(() => props.labels.length > 10);
+
+const root = ref<HTMLElement | null>(null);
+const hovered = ref<{ label: string; value: number; x: number; y: number } | null>(null);
+const tip = ref({ x: 0, y: 0 });
+
+function onMove(event: MouseEvent) {
+  const rect = root.value?.getBoundingClientRect();
+  if (!rect) return;
+  tip.value = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+}
+
+function enter(index: number) {
+  hovered.value = {
+    label: props.labels[index],
+    value: props.values[index] ?? 0,
+    x: points.value[index].x,
+    y: points.value[index].y,
+  };
+}
 </script>
 
 <template>
-  <svg :viewBox="`0 0 ${width} ${height}`" class="w-full" role="img">
-    <defs>
-      <linearGradient :id="gradientId" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" :stop-color="color" stop-opacity="0.35" />
-        <stop offset="100%" :stop-color="color" stop-opacity="0.02" />
-      </linearGradient>
-    </defs>
+  <div ref="root" class="chart" @mouseleave="hovered = null" @mousemove="onMove">
+    <svg :viewBox="`0 0 ${width} ${height}`" class="w-full" role="img">
+      <defs>
+        <linearGradient :id="gradientId" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" :stop-color="color" stop-opacity="0.35" />
+          <stop offset="100%" :stop-color="color" stop-opacity="0.02" />
+        </linearGradient>
+      </defs>
 
-    <g>
-      <line
-        v-for="tick in ticks"
-        :key="`grid-${tick}`"
-        :x1="PAD.left"
-        :x2="PAD.left + plotWidth"
-        :y1="toY(tick)"
-        :y2="toY(tick)"
-        class="chart-grid"
+      <g>
+        <line
+          v-for="tick in ticks"
+          :key="`grid-${tick}`"
+          :x1="PAD.left"
+          :x2="PAD.left + plotWidth"
+          :y1="toY(tick)"
+          :y2="toY(tick)"
+          class="chart-grid"
+        />
+        <text
+          v-for="tick in ticks"
+          :key="`tick-${tick}`"
+          :x="PAD.left - 8"
+          :y="toY(tick) + 3"
+          class="chart-tick"
+          text-anchor="end"
+        >
+          {{ tick }}
+        </text>
+      </g>
+
+      <line :x1="PAD.left" :x2="PAD.left + plotWidth" :y1="zeroY" :y2="zeroY" class="chart-axis" />
+      <path :d="areaPath" :fill="`url(#${gradientId})`" />
+      <path :d="linePath" fill="none" :stroke="color" stroke-width="2" stroke-linejoin="round" />
+
+      <circle
+        v-if="hovered"
+        :cx="hovered.x"
+        :cy="hovered.y"
+        r="3.5"
+        :fill="color"
+        stroke="var(--surface)"
+        stroke-width="1.5"
       />
-      <text
-        v-for="tick in ticks"
-        :key="`tick-${tick}`"
-        :x="PAD.left - 8"
-        :y="toY(tick) + 3"
-        class="chart-tick"
-        text-anchor="end"
-      >
-        {{ tick }}
-      </text>
-    </g>
 
-    <line :x1="PAD.left" :x2="PAD.left + plotWidth" :y1="zeroY" :y2="zeroY" class="chart-axis" />
-    <path :d="areaPath" :fill="`url(#${gradientId})`" />
-    <path :d="linePath" fill="none" :stroke="color" stroke-width="2" stroke-linejoin="round" />
-
-    <g>
-      <text
+      <rect
         v-for="(label, index) in labels"
-        :key="`xlabel-${label}`"
-        :x="PAD.left + band * (index + 0.5)"
-        :y="height - 8"
-        :transform="
-          showRotatedLabels
-            ? `rotate(-35 ${PAD.left + band * (index + 0.5)} ${height - 8})`
-            : undefined
-        "
-        :text-anchor="showRotatedLabels ? 'end' : 'middle'"
-        class="chart-tick"
-      >
-        {{ label }}
-      </text>
-    </g>
-  </svg>
+        :key="`hit-${label}`"
+        :x="PAD.left + band * index"
+        :y="PAD.top"
+        :width="band"
+        :height="plotHeight"
+        fill="transparent"
+        @mouseenter="enter(index)"
+      />
+
+      <g>
+        <text
+          v-for="(label, index) in labels"
+          :key="`xlabel-${label}`"
+          :x="PAD.left + band * (index + 0.5)"
+          :y="height - 8"
+          :transform="
+            showRotatedLabels
+              ? `rotate(-35 ${PAD.left + band * (index + 0.5)} ${height - 8})`
+              : undefined
+          "
+          :text-anchor="showRotatedLabels ? 'end' : 'middle'"
+          class="chart-tick"
+        >
+          {{ label }}
+        </text>
+      </g>
+    </svg>
+
+    <div v-if="hovered" class="chart-tip figure" :style="{ left: `${tip.x}px`, top: `${tip.y}px` }">
+      {{ hovered.label }} · {{ hovered.value.toLocaleString() }}
+    </div>
+  </div>
 </template>
