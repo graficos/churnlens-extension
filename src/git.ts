@@ -8,6 +8,7 @@ import { Boundary } from './series';
 
 const HEADER = '@@@';
 const SEP = '\u001f';
+const ARG_CHUNK = 500;
 
 export interface ChurnData {
   records: RawChange[];
@@ -76,9 +77,10 @@ export class GitService {
       ]);
 
       const parsed = parseNumstat(raw);
-      const records = parsed
+      const resolved = parsed
         .map((record) => ({ ...record, path: path.resolve(repoRoot, record.path) }))
         .filter((record) => isWithin(this.rootPath, record.path));
+      const records = await this.excludeIgnored(resolved);
 
       const files = toFileChurnMap(records, (filePath) => filePath);
 
@@ -89,6 +91,43 @@ export class GitService {
       Logger.error('Error fetching git history:', e);
       return { records: [], files: new Map(), head };
     }
+  }
+
+  // Drop files matched by .gitignore. --no-index checks the patterns against the
+  // path regardless of tracking, so committed-then-ignored files are removed too.
+  private async excludeIgnored(records: RawChange[]): Promise<RawChange[]> {
+    if (records.length === 0) {
+      return records;
+    }
+
+    const toGitPath = (absPath: string) =>
+      path.relative(this.rootPath, absPath).split(path.sep).join('/');
+    const unique = [...new Set(records.map((record) => toGitPath(record.path)))];
+    const ignored = new Set<string>();
+
+    for (let i = 0; i < unique.length; i += ARG_CHUNK) {
+      try {
+        const out = await this.git.raw([
+          '-c',
+          'core.quotePath=false',
+          'check-ignore',
+          '--no-index',
+          '--',
+          ...unique.slice(i, i + ARG_CHUNK),
+        ]);
+        for (const entry of out.split('\n')) {
+          if (entry) {
+            ignored.add(entry);
+          }
+        }
+      } catch {
+        // check-ignore exits non-zero when nothing matches; nothing to collect.
+      }
+    }
+
+    return ignored.size === 0
+      ? records
+      : records.filter((record) => !ignored.has(toGitPath(record.path)));
   }
 
   async getFileHistory(range: DateRange): Promise<Map<string, FileChurn>> {

@@ -47,6 +47,7 @@ This extension is inspired by the research on Code Churn as a predictor of defec
 - **Churn Explorer**: A dedicated sidebar exploring the churn of your project with a tree view.
 - **Trend view**: A dedicated panel with charts — churn over time, added vs removed, cumulative churn, deletion ratio, and churn grouped by commit type.
 - **Churn and Delta**: Switch the metric you are looking at. Churn measures total movement, delta measures net change.
+- **Gitignore-aware**: Files matched by `.gitignore` are left out of the calculations, the tree, and the charts.
 - **Date range**: Presets for the last 2, 3, 7 or 30 days, plus a custom start and end date.
 - **Baseline grouping**: Group the trend by semver tags, merge commits or time buckets.
 - **Risk panel**: The top files by churn, as proportional bars. Click one to open the file.
