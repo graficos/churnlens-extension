@@ -1,7 +1,7 @@
 {
   "name": "churnlens",
   "displayName": "ChurnLens",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Visualizes code churn in a Churn Explorer",
   "categories": [
     "Other"
@@ -56,7 +56,8 @@
         {
           "id": "churnlens.sidebar",
           "name": "Churn Explorer",
-          "type": "webview"
+          "type": "webview",
+          "icon": "resources/icon2.svg"
         }
       ]
     },
